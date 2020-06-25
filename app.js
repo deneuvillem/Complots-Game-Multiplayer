@@ -54,7 +54,7 @@ Vue.component('game', {
             </div>
 
             <div>
-                <button>Contrer</button>
+                <button v-if="countdown_flag" @click="$emit('event-contrer')">Contrer</button>
             </div>
             <p v-if="countdown_flag"> {{ countdown }} </p>
         </div>
@@ -66,24 +66,30 @@ Vue.component('game', {
     data() {
         return {
             countdown: 10,
-            countdown_flag: true
+            countdown_flag: false,
+            timer_flag: true
         }
     },
     methods: {
         startTimer() {
-            console.log(this.countdown);
-            let myTimer = setInterval(() => {
-                console.log(this.countdown);
+            if (this.timer_flag) {
+                this.timer_flag = false;
+                this.countdown = 10;
+                this.countdown_flag = true;
+                let myTimer = setInterval(() => {
+                    console.log(this.countdown);
 
-                if (--this.countdown < 0) {
-                    this.countdown_flag = false;
-                    console.log("end");
-                    clearInterval(myTimer);
-                }
-                else {
-                    console.log("next");
-                }
-            }, 1000);
+                    if (--this.countdown < 0) {
+                        console.log("end");
+                        clearInterval(myTimer);
+                        this.countdown_flag = false;
+                        this.timer_flag = true;
+                    }
+                    else {
+                        console.log("next");
+                    }
+                }, 1000);
+            }
         } 
     }
 })
@@ -99,7 +105,8 @@ const app = new Vue({
                 cards: ['Duc', false],
                 pieces: 0,
                 alive: true,
-                current_player: true
+                current_player: true, //Joueur qui joue le tour
+                connected_player: false
             },
             {
                 name: 'Arno',
@@ -107,7 +114,8 @@ const app = new Vue({
                 cards: [false, false], //Init des cartes (retournées au début), mettre des .png est mieux
                 pieces: 0,
                 alive: true,
-                current_player: false
+                current_player: false,
+                connected_player: true //Joueur connecté à la page web
             },
             {
                 name: 'Benjamin',
@@ -115,7 +123,8 @@ const app = new Vue({
                 cards: ['Duc', 'Comtesse'],
                 pieces: 0,
                 alive: false,
-                current_player: false
+                current_player: false,
+                connected_player: false
             },
             {
                 name: 'Luc',
@@ -123,7 +132,8 @@ const app = new Vue({
                 cards: ['Assassin', false],
                 pieces: 0,
                 alive: true,
-                current_player: false 
+                current_player: false,
+                connected_player: false
             }
         ],
         state: 'login',
@@ -152,6 +162,11 @@ const app = new Vue({
         },
         revenu() {
             this.players.find(player => player.current_player).pieces += 1;
+        },
+        contrer() {
+            let connected_player = this.players.find(player => player.connected_player);
+            let current_player = this.players.find(player => player.current_player);
+            console.log(connected_player.name + " contre " + current_player.name);
         }
     }
 })
