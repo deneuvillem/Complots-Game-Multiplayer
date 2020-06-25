@@ -31,6 +31,7 @@ Vue.component('game', {
         `
         <div>
             <h3>Jeu en cours</h3>
+
             <div v-for="player in playerspropgame" :key="player.id"> 
                 <p>
                 Joueur: {{ player.name }} 
@@ -41,18 +42,49 @@ Vue.component('game', {
                 <button v-show="target_p && !player.current_player && player.alive"
                     @click="$emit('event-target-player', player.id)">Cibler ce joueur</button>
             </div>
-            <button>Revenu</button>
-            <button>Aide étrangère</button>
-            <button @click="$emit('event-change-target-player')">Assassinat</button>
-            <button>Taxe</button>
-            <button @click="$emit('event-change-target-player')">Voler</button>
-            <button>Échanger</button>
-            <button @click="$emit('event-change-target-player')">Assassine</button>
+
+            <div>
+                <button @click="$emit('event-revenu')">Revenu</button>
+                <button @click="startTimer">Aide étrangère</button>
+                <button @click="$emit('event-change-target-player')">Assassinat</button>
+                <button>Taxe</button>
+                <button @click="$emit('event-change-target-player')">Voler</button>
+                <button>Échanger</button>
+                <button @click="$emit('event-change-target-player')">Assassine</button>
+            </div>
+
+            <div>
+                <button>Contrer</button>
+            </div>
+            <p v-if="countdown_flag"> {{ countdown }} </p>
         </div>
         `,
     props: {
         playerspropgame: Array,
-        target_p: Boolean
+        target_p: Boolean,
+    },
+    data() {
+        return {
+            countdown: 10,
+            countdown_flag: true
+        }
+    },
+    methods: {
+        startTimer() {
+            console.log(this.countdown);
+            let myTimer = setInterval(() => {
+                console.log(this.countdown);
+
+                if (--this.countdown < 0) {
+                    this.countdown_flag = false;
+                    console.log("end");
+                    clearInterval(myTimer);
+                }
+                else {
+                    console.log("next");
+                }
+            }, 1000);
+        } 
     }
 })
 
@@ -95,7 +127,9 @@ const app = new Vue({
             }
         ],
         state: 'login',
-        target_player_flag: false
+        target_player_flag: false,
+        countdown: 10,
+        countdown_flag: true
     },
     
     methods: {
@@ -115,6 +149,9 @@ const app = new Vue({
         },
         target_player(id) {
             console.log(this.players.find(player => player.id == id).name);
+        },
+        revenu() {
+            this.players.find(player => player.current_player).pieces += 1;
         }
     }
 })
