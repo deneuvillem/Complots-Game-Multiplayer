@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Complots</title>
+</head>
+
+<body>
+    <div id="app">
+
+        <login v-if="state=='login'" @event-start-lobby="start_lobby"></login>
+
+        <lobby v-if="state=='lobby'" :playersprop="players"
+            @event-player-disconnect="player_disconnect" @event-start-game="start_game">
+        </lobby>
+
+        <game v-if="state=='game'" :playerspropgame="players" :target_p="target_player_flag"
+            @event-change-target-player="change_target_player" @event-target-player="target_player">
+        </game>
+    
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
