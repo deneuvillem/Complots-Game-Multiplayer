@@ -16,8 +16,7 @@
             @event-player-disconnect="player_disconnect" @event-start-game="start_game">
         </lobby>
 
-        <game v-if="state=='game'" :playerspropgame="players" :target_p="target_player_flag"
-            @event-change-target-player="change_target_player" @event-target-player="target_player"
+        <game v-if="state=='game'" :playerspropgame="players" @event-target-player="target_player"
             @event-revenu="revenu" @event-contrer="contrer">
         </game>
     

@@ -39,18 +39,18 @@ Vue.component('game', {
                 {{ player.cards[1] }}
                 + Pièces: {{ player.pieces }}
                 </p> 
-                <button v-show="target_p && !player.current_player && player.alive"
+                <button v-show="target_player_flag && !player.current_player && player.alive"
                     @click="$emit('event-target-player', player.id)">Cibler ce joueur</button>
             </div>
 
             <div>
                 <button @click="$emit('event-revenu')">Revenu</button>
                 <button @click="startTimer">Aide étrangère</button>
-                <button @click="$emit('event-change-target-player')">Assassinat</button>
+                <button @click="change_target_player">Assassinat</button>
                 <button>Taxe</button>
-                <button @click="$emit('event-change-target-player')">Voler</button>
+                <button @click="change_target_player">Voler</button>
                 <button>Échanger</button>
-                <button @click="$emit('event-change-target-player')">Assassine</button>
+                <button @click="change_target_player">Assassine</button>
             </div>
 
             <div>
@@ -60,11 +60,11 @@ Vue.component('game', {
         </div>
         `,
     props: {
-        playerspropgame: Array,
-        target_p: Boolean,
+        playerspropgame: Array
     },
     data() {
         return {
+            target_player_flag: false,
             countdown: 10,
             countdown_flag: false,
             timer_flag: true
@@ -90,7 +90,10 @@ Vue.component('game', {
                     }
                 }, 1000);
             }
-        } 
+        },
+        change_target_player() {
+            this.target_player_flag = !this.target_player_flag;
+        }, 
     }
 })
 
@@ -136,10 +139,7 @@ const app = new Vue({
                 connected_player: false
             }
         ],
-        state: 'login',
-        target_player_flag: false,
-        countdown: 10,
-        countdown_flag: true
+        state: 'login'
     },
     
     methods: {
@@ -154,11 +154,10 @@ const app = new Vue({
             this.players.splice(this.players.findIndex(player => player.id == id), 1);
             console.log(this.players);
         },
-        change_target_player() {
-            this.target_player_flag = !this.target_player_flag;
-        },
         target_player(id) {
-            console.log(this.players.find(player => player.id == id).name);
+            let current_player = this.players.find(player => player.current_player);
+            let targeted_player = this.players.find(player => player.id == id)
+            console.log(current_player.name + " cible " + targeted_player.name);
         },
         revenu() {
             this.players.find(player => player.current_player).pieces += 1;
