@@ -41,7 +41,13 @@ Vue.component('game', {
                 <button v-show="target_p && !player.current_player && player.alive"
                     @click="$emit('event-target-player', player.id)">Cibler ce joueur</button>
             </div>
-            <button @click="$emit('event-change-target-player')">Attaquer joueurs</button>
+            <button>Revenu</button>
+            <button>Aide étrangère</button>
+            <button @click="$emit('event-change-target-player')">Assassinat</button>
+            <button>Taxe</button>
+            <button @click="$emit('event-change-target-player')">Voler</button>
+            <button>Échanger</button>
+            <button @click="$emit('event-change-target-player')">Assassine</button>
         </div>
         `,
     props: {
