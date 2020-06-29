@@ -1,4 +1,5 @@
-var socket = io.connect('http://localhost:8080');
+const socket = io.connect('http://localhost:8080');
+socket.emit('nouveau_client');
 
 Vue.component('login', {
     template: 
@@ -99,7 +100,6 @@ Vue.component('game', {
     }
 })
 
-
 const app = new Vue({
     el: '#app',
     data: {
@@ -169,5 +169,9 @@ const app = new Vue({
             let current_player = this.players.find(player => player.current_player);
             console.log(connected_player.name + " contre " + current_player.name);
         }
+    },
+    created() {
+        console.log("Test");
     }
-})
+
+});
