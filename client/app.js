@@ -1,14 +1,19 @@
 const socket = io.connect('http://localhost:8080');
-socket.emit('nouveau_client');
 
 Vue.component('login', {
     template: 
         `
         <div>
             <p class="test">Login screen</p>
-            <button @click="$emit('event-start-lobby')">Commencer la partie</button>
+            <input type="text" v-model="username">
+            <button @click="$emit('event-start-lobby', username)">Commencer la partie</button>
         </div>
-        `
+        `,
+    data() {
+        return {
+            username: ""
+        }
+    }
 })
 
 Vue.component('lobby', {
@@ -17,15 +22,16 @@ Vue.component('lobby', {
         <div>
             <p> Joueurs: </p>
             <div v-for="player in playersprop" :key="player.id"> 
-                <p> {{ player.name }} </p>
-                <button @click="$emit('event-player-disconnect', player.id)">Déconnexion</button>
+                <p> {{ player.username }} </p>
+                <button v-if="player.id==playerid">Prêt</button>
             </div>
             <p></p>
             <button @click="$emit('event-start-game')">Lancer la partie</button>
         </div>
         `,
     props: {
-        playersprop: Array
+        playersprop: Array,
+        playerid: String
     }
 })
 
@@ -103,58 +109,19 @@ Vue.component('game', {
 const app = new Vue({
     el: '#app',
     data: {
-        players: [
-            {
-                name: 'Maxime',
-                id: 54,
-                cards: ['Duc', false],
-                pieces: 0,
-                alive: true,
-                current_player: true, //Joueur qui joue le tour
-                connected_player: false
-            },
-            {
-                name: 'Arno',
-                id: 31,
-                cards: [false, false], //Init des cartes (retournées au début), mettre des .png est mieux
-                pieces: 0,
-                alive: true,
-                current_player: false,
-                connected_player: true //Joueur connecté à la page web
-            },
-            {
-                name: 'Benjamin',
-                id: 12,
-                cards: ['Duc', 'Comtesse'],
-                pieces: 0,
-                alive: false,
-                current_player: false,
-                connected_player: false
-            },
-            {
-                name: 'Luc',
-                id: 07,
-                cards: ['Assassin', false],
-                pieces: 0,
-                alive: true,
-                current_player: false,
-                connected_player: false
-            }
-        ],
-        state: 'login'
+        players: [],
+        state: 'login',
+        current_id: ""
     },
     
     methods: {
-        start_lobby() {
+        start_lobby(player_username) {
             this.state = 'lobby';
-            console.log(this.players);
+            console.log(player_username);
+            socket.emit('new_player', player_username);
         },
         start_game() {
             this.state = 'game';
-        },
-        player_disconnect(id) {
-            this.players.splice(this.players.findIndex(player => player.id == id), 1);
-            console.log(this.players);
         },
         target_player(id) {
             let current_player = this.players.find(player => player.current_player);
@@ -170,8 +137,15 @@ const app = new Vue({
             console.log(connected_player.name + " contre " + current_player.name);
         }
     },
+
     created() {
-        console.log("Test");
+        socket.on('get_id', (id) => {
+            this.current_id = id;
+        });
+
+        socket.on('refresh_players', (players) => {
+            this.players = players;
+        });
     }
 
 });
