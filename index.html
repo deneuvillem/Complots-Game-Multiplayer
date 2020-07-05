@@ -12,8 +12,8 @@
 
         <login v-if="state=='login'" @event-start-lobby="start_lobby"></login>
 
-        <lobby v-if="state=='lobby'" :playersprop="players" :playerid="current_id"
-            @event-start-game="start_game">
+        <lobby v-if="state=='lobby'" :playersprop="players" @event-player-ready="player_ready"
+            @event-player-not-ready="player_not_ready">
         </lobby>
 
         <game v-if="state=='game'" :playerspropgame="players" @event-target-player="target_player"

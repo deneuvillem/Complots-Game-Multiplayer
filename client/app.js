@@ -22,16 +22,33 @@ Vue.component('lobby', {
         <div>
             <p> Joueurs: </p>
             <div v-for="player in playersprop" :key="player.id"> 
-                <p> {{ player.username }} </p>
-                <button v-if="player.id==playerid">Prêt</button>
+                <p> {{ player.username }}
+                    <p v-if="!player.ready"> Pas prêt </p>
+                    <p v-else> Prêt </p>
+                </p>
             </div>
             <p></p>
-            <button @click="$emit('event-start-game')">Lancer la partie</button>
+            <button v-if="!ready" @click="player_ready">Prêt</button>
+            <button v-else @click="player_not_ready">Pas prêt</button>
         </div>
         `,
     props: {
-        playersprop: Array,
-        playerid: String
+        playersprop: Array
+    },
+    data() {
+        return {
+            ready: false
+        }
+    },
+    methods: {
+        player_ready() {
+            this.$emit('event-player-ready');
+            this.ready = true;
+        },
+        player_not_ready() {
+            this.$emit('event-player-not-ready');
+            this.ready = false;
+        }
     }
 })
 
@@ -43,10 +60,11 @@ Vue.component('game', {
 
             <div v-for="player in playerspropgame" :key="player.id"> 
                 <p>
-                Joueur: {{ player.name }} 
+                Joueur: {{ player.username }} 
                 + Cartes: {{ player.cards[0] }}
-                {{ player.cards[1] }}
+                    {{ player.cards[1] }}
                 + Pièces: {{ player.pieces }}
+                + En vie ? {{ player.alive }}
                 </p> 
                 <button v-show="target_player_flag && !player.current_player && player.alive"
                     @click="$emit('event-target-player', player.id)">Cibler ce joueur</button>
@@ -119,9 +137,13 @@ const app = new Vue({
             this.state = 'lobby';
             console.log(player_username);
             socket.emit('new_player', player_username);
+            document.title = player_username + ' - ' + document.title;
         },
-        start_game() {
-            this.state = 'game';
+        player_ready() {
+            socket.emit('player_ready');
+        },
+        player_not_ready() {
+            socket.emit('player_not_ready');
         },
         target_player(id) {
             let current_player = this.players.find(player => player.current_player);
@@ -145,6 +167,10 @@ const app = new Vue({
 
         socket.on('refresh_players', (players) => {
             this.players = players;
+        });
+
+        socket.on('start_game', () => {
+            this.state = 'game';
         });
     }
 
