@@ -76,10 +76,10 @@ Vue.component('game', {
                     @click="$emit('event-target-player', player.id)">Cibler ce joueur</button>
             </div>
 
-            <div v-if="player_id==current_player_id">
+            <div v-if="my_turn_flag">
                 <p> C'est à votre tour de jouer ! </p>
                 <button @click="revenu">Revenu</button>
-                <button @click="startTimer">Aide étrangère</button>
+                <button @click="aide_etrangere">Aide étrangère</button>
                 <button @click="change_target_player">Assassinat</button>
                 <button>Taxe</button>
                 <button @click="change_target_player">Voler</button>
@@ -89,9 +89,14 @@ Vue.component('game', {
 
             <div v-else>
                 <p> {{ current_player_id }} joue !</p>
-                <button v-if="countdown_flag" @click="$emit('event-contrer')">Contrer</button>
+                <button v-if="contrer_flag" @click="contrer">Contrer</button>
             </div>
             <p v-if="countdown_flag"> {{ countdown }} </p>
+
+            <div v-if="choice_flag">
+                <button>Je dis la vérité</button>
+                <button>Je mens</button>
+            </div>
 
             <p> Action effectuée: {{ action_message }} </p>
 
@@ -108,31 +113,13 @@ Vue.component('game', {
             target_player_flag: false,
             countdown: 10,
             countdown_flag: false,
-            timer_flag: true,
+            contrer_flag: false,
+            my_turn_flag: false,
+            choice_flag: false
         }
     },
 
     methods: {
-        startTimer() {
-            if (this.timer_flag) {
-                this.timer_flag = false;
-                this.countdown = 10;
-                this.countdown_flag = true;
-                let myTimer = setInterval(() => {
-                    console.log(this.countdown);
-
-                    if (--this.countdown < 0) {
-                        console.log("end");
-                        clearInterval(myTimer);
-                        this.countdown_flag = false;
-                        this.timer_flag = true;
-                    }
-                    else {
-                        console.log("next");
-                    }
-                }, 1000);
-            }
-        },
         change_target_player() {
             this.target_player_flag = !this.target_player_flag;
         },
@@ -144,10 +131,11 @@ Vue.component('game', {
         revenu() {
             socket.emit('revenu');
         },
+        aide_etrangere() {
+            socket.emit('aide_etrangere');
+        },
         contrer() {
-            let connected_player = this.players.find(player => player.connected_player);
-            let current_player = this.players.find(player => player.current_player);
-            console.log(connected_player.name + " contre " + current_player.name);
+            socket.emit('contrer');
         }
     },
 
@@ -160,8 +148,28 @@ Vue.component('game', {
             this.current_player_id = player_id;
         });
 
+        socket.on('my_turn_flag', (bool) => {
+            this.my_turn_flag = bool;
+        });
+
         socket.on('action_message', (message) => {
             this.action_message = message;
+        });
+
+        socket.on('countdown', (countdown) => {
+            this.countdown = countdown;
+        });
+
+        socket.on('countdown_flag', (bool) => {
+            this.countdown_flag = bool;
+        })
+
+        socket.on('contrer_flag', (bool) => {
+            this.contrer_flag = bool;
+        });
+
+        socket.on('choice_flag', (bool) => {
+            this.choice_flag = bool;
         });
     }
 })

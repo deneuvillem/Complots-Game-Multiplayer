@@ -1,4 +1,5 @@
 var express = require('express');
+const { count } = require('console');
 var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
@@ -34,6 +35,8 @@ var count_ready_players = 0;
 var current_player; //Joueur qui joue le tour
 var index_players = 0; //Pour itérer sur la liste des joueurs
 var game_started = false;
+var counter_player;
+var already_played = false;
 
 //////////////////////////////////////////
 
@@ -42,7 +45,7 @@ io.sockets.on('connection', function(socket) {
     if (game_started) { //Si la partie a déjà commencé: spectateur
         socket.emit('start_game');
         socket.emit('refresh_players_game', players);
-        io.sockets.emit('get_current_player', current_player);
+        socket.emit('get_current_player_id', current_player.id);
     }
 
     //LOBBY
@@ -98,13 +101,50 @@ io.sockets.on('connection', function(socket) {
 
     //GAME
     socket.on('revenu', function() {
-        if (socket.id === current_player.id) {
+        if (socket.id === current_player.id && !already_played) {
+            already_played = true;
+            socket.emit('my_turn_flag', false);
             current_player.pieces += 1;
             io.sockets.emit('refresh_players_game', players);
             io.sockets.emit('action_message', 'Revenu'); 
             next_turn_player();
         }
     });
+
+    socket.on('aide_etrangere', function() {
+        if (socket.id === current_player.id && !already_played) {
+            already_played = true;
+            socket.emit('my_turn_flag', false);
+            io.sockets.emit('countdown_flag', true);
+            socket.broadcast.emit('contrer_flag', true);
+            let countdown = 10;
+            
+            let myTimer = setInterval(() => {
+                io.sockets.emit('countdown', countdown);
+                console.log(countdown);
+                //Un joueur contre
+                if (counter_player && counter_player.id !== current_player.id) {
+                    clearInterval(myTimer);
+                    io.sockets.emit('action_message', counter_player.username + " contre " + current_player.username);
+                    io.sockets.emit('countdown_flag', false);
+                    socket.broadcast.emit('contrer_flag', false);
+                    socket.emit('choice_flag', true)
+                }
+        
+                if (--countdown < 0) {
+                    console.log("end");
+                    clearInterval(myTimer);
+                }
+            }, 1000);
+        }
+    });
+
+    socket.on('contrer', function() {
+        if (!counter_player) {
+            counter_player = players.find(player => player.id == socket.id);
+        }
+    });
+
 });
 
 function start_game() {
@@ -139,6 +179,7 @@ function next_turn_player() {
     }
     current_player = players[index_players];
     io.sockets.emit('get_current_player_id', current_player.id);
+    io.sockets.to(current_player.id).emit('my_turn_flag', true);
 }
 
 app.use("/style", express.static('./style/'));  //Contient le style des pages (.css)
