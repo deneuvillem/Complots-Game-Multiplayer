@@ -41,11 +41,11 @@ io.sockets.on('connection', function(socket) {
 
     if (game_started) { //Si la partie a déjà commencé: spectateur
         socket.emit('start_game');
-        socket.emit('refresh_players', players);
-        socket.emit('get_id', socket.id);
+        socket.emit('refresh_players_game', players);
         io.sockets.emit('get_current_player', current_player);
     }
 
+    //LOBBY
     socket.on('new_player', function(player_username) {
         console.log("Pseudo: " + player_username + ", ID: " + socket.id);
         players.push({
@@ -56,15 +56,14 @@ io.sockets.on('connection', function(socket) {
             pieces: 0,
             alive: true
         });
-        socket.emit('get_id', socket.id);
-        io.sockets.emit('refresh_players', players);
+        io.sockets.emit('refresh_players_lobby', players);
     });
 
     socket.on('player_ready', function() {
         let player = players.find(player => player.id == socket.id);
         if (!player.ready) {
             player.ready = true;
-            io.sockets.emit('refresh_players', players);
+            io.sockets.emit('refresh_players_lobby', players);
             count_ready_players++;
             if (count_ready_players == players.length && count_ready_players >= 2) {
                 start_game();
@@ -76,22 +75,34 @@ io.sockets.on('connection', function(socket) {
         let player = players.find(player => player.id == socket.id);
         if (player.ready) {
             player.ready = false;
-            io.sockets.emit('refresh_players', players);
+            io.sockets.emit('refresh_players_lobby', players);
             count_ready_players--;
         }
     });
 
     socket.on('disconnect', function() {
         let disconnected_player = players.find(player => player.id == socket.id);
+        //Si joueur déconnecté est en jeu
         if (disconnected_player != undefined && game_started) {
             console.log("Le joueur " + disconnected_player.username + " s'est déconnecté en jeu!");
             disconnected_player.alive = false;
-            io.sockets.emit('refresh_players', players);  
+            io.sockets.emit('refresh_players_game', players);  
         }
+        //Si joueur déconnecté dans le lobby
         else if (disconnected_player != undefined) {
             console.log("Le joueur " + disconnected_player.username + " s'est déconnecté du lobby!");
             players.splice(players.findIndex(player => player.id == socket.id), 1);
-            io.sockets.emit('refresh_players', players); 
+            io.sockets.emit('refresh_players_lobby', players); 
+        }
+    });
+
+    //GAME
+    socket.on('revenu', function() {
+        if (socket.id === current_player.id) {
+            current_player.pieces += 1;
+            io.sockets.emit('refresh_players_game', players);
+            io.sockets.emit('action_message', 'Revenu'); 
+            next_turn_player();
         }
     });
 });
@@ -101,13 +112,11 @@ function start_game() {
     game_started = true;
     deal_players_cards();
     io.sockets.emit('start_game');
-    io.sockets.emit('refresh_players', players);
-    current_player = players[index_players].id;
-    io.sockets.emit('get_current_player', current_player);
-    index_players++;
+    io.sockets.emit('refresh_players_game', players);
+    next_turn_player();
 
     console.log("Partie lancée !");
-    console.log("Le joueur qui a l'id: " + current_player + " commence!");
+    console.log("Le joueur qui a l'id: " + current_player.id + " commence!");
     console.log(players);
     console.log(players_cards);
     console.log(deck);
@@ -121,6 +130,15 @@ function deal_players_cards() {
         });
         deck.splice(0, 2);
     });
+}
+
+function next_turn_player() {
+    index_players++;
+    if (index_players === players.length) {
+        index_players = 0;
+    }
+    current_player = players[index_players];
+    io.sockets.emit('get_current_player_id', current_player.id);
 }
 
 app.use("/style", express.static('./style/'));  //Contient le style des pages (.css)
