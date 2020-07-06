@@ -1,6 +1,5 @@
 const socket = io.connect('http://localhost:8080');
 
-
 Vue.component('login', {
     template: 
         `
@@ -76,6 +75,8 @@ Vue.component('game', {
                     @click="$emit('event-target-player', player.id)">Cibler ce joueur</button>
             </div>
 
+            </p> Mes cartes: {{ cards[0] }} et {{ cards[1] }} </p>
+
             <div v-if="my_turn_flag">
                 <p> C'est à votre tour de jouer ! </p>
                 <button @click="revenu">Revenu</button>
@@ -93,12 +94,15 @@ Vue.component('game', {
             </div>
             <p v-if="countdown_flag"> {{ countdown }} </p>
 
-            <div v-if="choice_flag">
-                <button>Je dis la vérité</button>
-                <button>Je mens</button>
-            </div>
-
             <p> Action effectuée: {{ action_message }} </p>
+
+            <p> Résultat: {{ action_message2 }} </p>
+
+            <div v-if="choice_cards">
+                <p> Quelle carte perdre ? </p>
+                <button v-if="cards[0]" @click="lose_card(0)"> {{ cards[0] }} </button>
+                <button v-if="cards[1]" @click="lose_card(1)"> {{ cards[1] }} </button>
+            </div>
 
         </div>
         `,
@@ -109,13 +113,15 @@ Vue.component('game', {
             current_player_id: '', //ID du joueur jouant le tour
             player_id: socket.id, //ID du Client
             action_message: '',
+            action_message2: '',
 
             target_player_flag: false,
             countdown: 10,
             countdown_flag: false,
             contrer_flag: false,
             my_turn_flag: false,
-            choice_flag: false
+            choice_cards: false,
+            cards: []
         }
     },
 
@@ -136,6 +142,9 @@ Vue.component('game', {
         },
         contrer() {
             socket.emit('contrer');
+        },
+        lose_card(card_number) {
+            socket.emit('lose_card', card_number);
         }
     },
 
@@ -156,6 +165,10 @@ Vue.component('game', {
             this.action_message = message;
         });
 
+        socket.on('action_message2', (message) => {
+            this.action_message2 = message;
+        });
+
         socket.on('countdown', (countdown) => {
             this.countdown = countdown;
         });
@@ -168,8 +181,12 @@ Vue.component('game', {
             this.contrer_flag = bool;
         });
 
-        socket.on('choice_flag', (bool) => {
-            this.choice_flag = bool;
+        socket.on('choice_cards', (bool) => {
+            this.choice_cards = bool;
+        });
+
+        socket.on('cards', (cards) => {
+            this.cards = cards;
         });
     }
 })
@@ -184,7 +201,6 @@ const app = new Vue({
     methods: {
         start_lobby(player_username) {
             this.state = 'lobby';
-            console.log(player_username);
             socket.emit('new_player', player_username);
             document.title = player_username + ' - ' + document.title;
         },

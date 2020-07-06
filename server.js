@@ -100,6 +100,26 @@ io.sockets.on('connection', function(socket) {
     });
 
     //GAME
+    socket.on('lose_card', function(card_number) {
+        if (socket.id === current_player.id || socket.id === counter_player.id) {
+            let player = players.find(player => player.id === socket.id);
+            let player_cards = players_cards.find(player => player.id === socket.id);
+            let card = player_cards.cards[card_number];
+            //Serveur
+            player_cards.cards[card_number] = false;
+            //Vue (client)
+            player.cards[card_number] = card;
+            //Le joueur n'a plus de cartes en jeu
+            if (!player_cards.cards[0] && !player_cards.cards[1]) {
+                player.alive = false;
+            }
+            io.sockets.emit('refresh_players_game', players);
+            socket.emit('choice_cards', false);
+            io.sockets.emit('action_message2', player.username + " perd son/sa " + card);
+            socket.emit('cards', player_cards.cards);
+        }
+    });
+
     socket.on('revenu', function() {
         if (socket.id === current_player.id && !already_played) {
             already_played = true;
@@ -122,13 +142,24 @@ io.sockets.on('connection', function(socket) {
             let myTimer = setInterval(() => {
                 io.sockets.emit('countdown', countdown);
                 console.log(countdown);
-                //Un joueur contre
+
+                //Un joueur contre l'action
                 if (counter_player && counter_player.id !== current_player.id) {
                     clearInterval(myTimer);
                     io.sockets.emit('action_message', counter_player.username + " contre " + current_player.username);
                     io.sockets.emit('countdown_flag', false);
                     socket.broadcast.emit('contrer_flag', false);
-                    socket.emit('choice_flag', true)
+                    if (owns_card('Duc')) {
+                        io.sockets.emit('action_message2', current_player.username + " possédait bien un Duc donc "
+                        + counter_player.username + " va perdre une carte !");
+                        io.sockets.to(counter_player.id).emit('choice_cards', true);
+                    }
+                    else {
+                        io.sockets.emit('action_message2', current_player.username + " a menti et va perdre une carte !");
+                        socket.emit('choice_cards', true);
+                    }
+
+                    already_played = false;
                 }
         
                 if (--countdown < 0) {
@@ -155,6 +186,11 @@ function start_game() {
     io.sockets.emit('refresh_players_game', players);
     next_turn_player();
 
+    //Affichage des cartes
+    players_cards.forEach((player) => {
+        io.sockets.to(player.id).emit('cards', [player.cards[0], player.cards[1]]);
+    });
+
     console.log("Partie lancée !");
     console.log("Le joueur qui a l'id: " + current_player.id + " commence!");
     console.log(players);
@@ -163,7 +199,7 @@ function start_game() {
 }
 
 function deal_players_cards() {
-    players.forEach(function (player) {
+    players.forEach((player) => {
         players_cards.push({
             id: player.id,
             cards: [deck[0], deck[1]]
@@ -180,6 +216,14 @@ function next_turn_player() {
     current_player = players[index_players];
     io.sockets.emit('get_current_player_id', current_player.id);
     io.sockets.to(current_player.id).emit('my_turn_flag', true);
+}
+
+function owns_card(card) {
+    let player = players_cards.find(player => player.id === current_player.id);
+    if (player.cards[0] === card || player.cards[1] === card) {
+        return true;
+    }
+    return false;
 }
 
 app.use("/style", express.static('./style/'));  //Contient le style des pages (.css)
