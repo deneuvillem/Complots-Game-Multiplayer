@@ -17,7 +17,7 @@
         </lobby>
 
         <game v-if="state=='game'" :playerspropgame="players" @event-target-player="target_player"
-            @event-revenu="revenu" @event-contrer="contrer">
+            :currentid="current_id" :currentplayer="current_player" @event-revenu="revenu" @event-contrer="contrer">
         </game>
     
     </div>

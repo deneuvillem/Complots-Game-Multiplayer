@@ -31,7 +31,8 @@ var deck = shuffle(cards);
 var players = [];
 var players_cards = [];
 var count_ready_players = 0;
-var current_player_id; //Joueur qui joue le tour
+var current_player; //Joueur qui joue le tour
+var index_players = 0; //Pour itérer sur la liste des joueurs
 var game_started = false;
 
 //////////////////////////////////////////
@@ -41,6 +42,8 @@ io.sockets.on('connection', function(socket) {
     if (game_started) { //Si la partie a déjà commencé: spectateur
         socket.emit('start_game');
         socket.emit('refresh_players', players);
+        socket.emit('get_id', socket.id);
+        io.sockets.emit('get_current_player', current_player);
     }
 
     socket.on('new_player', function(player_username) {
@@ -64,12 +67,7 @@ io.sockets.on('connection', function(socket) {
             io.sockets.emit('refresh_players', players);
             count_ready_players++;
             if (count_ready_players == players.length && count_ready_players >= 2) {
-                game_started = true;
-                deal_players_cards();
-                io.sockets.emit('start_game');
-                console.log("Partie lancée !");
-                console.log(players);
-                console.log(players_cards);
+                start_game();
             }
         }
     });
@@ -85,13 +83,35 @@ io.sockets.on('connection', function(socket) {
 
     socket.on('disconnect', function() {
         let disconnected_player = players.find(player => player.id == socket.id);
-        if (disconnected_player != undefined) {
-            console.log("Le joueur " + disconnected_player.username + " s'est déconnecté !");
-            players.splice(players.findIndex(player => player.id == socket.id), 1);
+        if (disconnected_player != undefined && game_started) {
+            console.log("Le joueur " + disconnected_player.username + " s'est déconnecté en jeu!");
+            disconnected_player.alive = false;
             io.sockets.emit('refresh_players', players);  
+        }
+        else if (disconnected_player != undefined) {
+            console.log("Le joueur " + disconnected_player.username + " s'est déconnecté du lobby!");
+            players.splice(players.findIndex(player => player.id == socket.id), 1);
+            io.sockets.emit('refresh_players', players); 
         }
     });
 });
+
+function start_game() {
+    players = shuffle(players);
+    game_started = true;
+    deal_players_cards();
+    io.sockets.emit('start_game');
+    io.sockets.emit('refresh_players', players);
+    current_player = players[index_players].id;
+    io.sockets.emit('get_current_player', current_player);
+    index_players++;
+
+    console.log("Partie lancée !");
+    console.log("Le joueur qui a l'id: " + current_player + " commence!");
+    console.log(players);
+    console.log(players_cards);
+    console.log(deck);
+}
 
 function deal_players_cards() {
     players.forEach(function (player) {

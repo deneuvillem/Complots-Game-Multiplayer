@@ -11,7 +11,7 @@ Vue.component('login', {
         `,
     data() {
         return {
-            username: ""
+            username: ''
         }
     }
 })
@@ -60,17 +60,18 @@ Vue.component('game', {
 
             <div v-for="player in playerspropgame" :key="player.id"> 
                 <p>
-                Joueur: {{ player.username }} 
+                Joueur: {{ player.username }} ({{player.id}}) 
                 + Cartes: {{ player.cards[0] }}
                     {{ player.cards[1] }}
                 + Pièces: {{ player.pieces }}
                 + En vie ? {{ player.alive }}
-                </p> 
-                <button v-show="target_player_flag && !player.current_player && player.alive"
+                </p>
+                <button v-show="target_player_flag && player.id!=currentplayer"
                     @click="$emit('event-target-player', player.id)">Cibler ce joueur</button>
             </div>
 
-            <div>
+            <div v-if="currentid==currentplayer">
+                <p> C'est à votre tour de jouer ! </p>
                 <button @click="$emit('event-revenu')">Revenu</button>
                 <button @click="startTimer">Aide étrangère</button>
                 <button @click="change_target_player">Assassinat</button>
@@ -80,14 +81,18 @@ Vue.component('game', {
                 <button @click="change_target_player">Assassine</button>
             </div>
 
-            <div>
+            <div v-else>
+                <p> {{ currentplayer }} joue !</p>
                 <button v-if="countdown_flag" @click="$emit('event-contrer')">Contrer</button>
             </div>
             <p v-if="countdown_flag"> {{ countdown }} </p>
+
         </div>
         `,
     props: {
-        playerspropgame: Array
+        playerspropgame: Array,
+        currentid: String,
+        currentplayer: String
     },
     data() {
         return {
@@ -129,7 +134,8 @@ const app = new Vue({
     data: {
         players: [],
         state: 'login',
-        current_id: ""
+        current_id: '',  //ID du Client
+        current_player: '' //ID du joueur qui joue le tour
     },
     
     methods: {
@@ -171,6 +177,10 @@ const app = new Vue({
 
         socket.on('start_game', () => {
             this.state = 'game';
+        });
+
+        socket.on('get_current_player', (player_id) => {
+            this.current_player = player_id;
         });
     }
 
