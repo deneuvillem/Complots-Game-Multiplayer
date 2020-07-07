@@ -90,15 +90,22 @@ Vue.component('game', {
 
             <div v-else>
                 <p> {{ current_player_id }} joue !</p>
-                <button v-if="contrer_flag" @click="contrer">Contrer</button>
+                <div v-if="aide_etrangere_flag">
+                    <button @click="autoriser">J'autorise</button>
+                    <button @click="contrer">Je contre car j'ai un Duc</button>
+                </div>
             </div>
             <p v-if="countdown_flag"> {{ countdown }} </p>
 
             <p> Action effectuée: {{ action_message }} </p>
-
             <p> Résultat: {{ action_message2 }} </p>
 
-            <div v-if="choice_cards">
+            <div v-if="choice_flag">
+                <button @click="truth">Il ou Elle dit la vérité</button>
+                <button @click="lie">Il ou Elle ment</button>
+            </div>
+
+            <div v-if="choice_cards_flag">
                 <p> Quelle carte perdre ? </p>
                 <button v-if="cards[0]" @click="lose_card(0)"> {{ cards[0] }} </button>
                 <button v-if="cards[1]" @click="lose_card(1)"> {{ cards[1] }} </button>
@@ -120,8 +127,10 @@ Vue.component('game', {
             countdown_flag: false,
             contrer_flag: false,
             my_turn_flag: false,
-            choice_cards: false,
-            cards: []
+            choice_flag:false,
+            choice_cards_flag: false,
+            cards: [],
+            aide_etrangere_flag: false
         }
     },
 
@@ -145,6 +154,15 @@ Vue.component('game', {
         },
         lose_card(card_number) {
             socket.emit('lose_card', card_number);
+        },
+        autoriser() {
+            socket.emit('autoriser');
+        },
+        truth() {
+            socket.emit('truth');
+        },
+        lie() {
+            socket.emit('lie');
         }
     },
 
@@ -177,16 +195,20 @@ Vue.component('game', {
             this.countdown_flag = bool;
         })
 
-        socket.on('contrer_flag', (bool) => {
-            this.contrer_flag = bool;
+        socket.on('aide_etrangere_flag', (bool) => {
+            this.aide_etrangere_flag = bool;
         });
 
-        socket.on('choice_cards', (bool) => {
-            this.choice_cards = bool;
+        socket.on('choice_cards_flag', (bool) => {
+            this.choice_cards_flag = bool;
         });
 
         socket.on('cards', (cards) => {
             this.cards = cards;
+        });
+
+        socket.on('choice_flag', (bool) => {
+            this.choice_flag = bool;
         });
     }
 })
