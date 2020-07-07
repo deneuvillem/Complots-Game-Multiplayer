@@ -109,6 +109,7 @@ io.sockets.on('connection', function(socket) {
         if (player && socket.id !== current_player.id) {
             console.log('autorise');
             player.autorise = true;
+            socket.emit('aide_etrangere_flag', false);
         }
     });
 
@@ -407,6 +408,12 @@ function next_turn_player() {
         index_players++;
         if (index_players === players.length) {
             index_players = 0;
+        }
+        while (!players[index_players].alive) {
+            index_players++;
+            if (index_players === players.length) {
+                index_players = 0;
+            }
         }
         current_player = players[index_players];
         io.sockets.emit('get_current_player_id', current_player.id);
