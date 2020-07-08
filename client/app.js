@@ -70,9 +70,10 @@ Vue.component('game', {
                     {{ player.cards[1] }}
                 + Pièces: {{ player.pieces }}
                 + En vie ? {{ player.alive }}
+                + Autorise le tour ? {{ player.autorise }}
                 </p>
                 <button v-show="target_player_flag && player.id!=current_player_id"
-                    @click="$emit('event-target-player', player.id)">Cibler ce joueur</button>
+                    @click="target_player(player.id)">Cibler ce joueur</button>
             </div>
 
             </p> Mes cartes: {{ cards[0] }} et {{ cards[1] }} </p>
@@ -81,11 +82,11 @@ Vue.component('game', {
                 <p> C'est à votre tour de jouer ! </p>
                 <button @click="revenu">Revenu</button>
                 <button @click="aide_etrangere">Aide étrangère</button>
-                <button @click="change_target_player">Assassinat</button>
+                <button @click="assassinat">Assassinat</button>
                 <button>Taxe</button>
-                <button @click="change_target_player">Voler</button>
+                <button>Voler</button>
                 <button>Échanger</button>
-                <button @click="change_target_player">Assassine</button>
+                <button>Assassine</button>
             </div>
 
             <div v-else>
@@ -135,13 +136,8 @@ Vue.component('game', {
     },
 
     methods: {
-        change_target_player() {
-            this.target_player_flag = !this.target_player_flag;
-        },
         target_player(id) {
-            let current_player = this.players.find(player => player.current_player);
-            let targeted_player = this.players.find(player => player.id == id)
-            console.log(current_player.name + " cible " + targeted_player.name);
+            socket.emit('assassinat_player', id);
         },
         revenu() {
             socket.emit('revenu');
@@ -163,6 +159,9 @@ Vue.component('game', {
         },
         lie() {
             socket.emit('lie');
+        },
+        assassinat() {
+            socket.emit('assassinat');
         }
     },
 
@@ -209,6 +208,10 @@ Vue.component('game', {
 
         socket.on('choice_flag', (bool) => {
             this.choice_flag = bool;
+        });
+
+        socket.on('target_player_flag', (bool) => {
+            this.target_player_flag = bool;
         });
     }
 })
