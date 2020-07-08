@@ -133,15 +133,20 @@ io.sockets.on('connection', function(socket) {
         if (socket.id === current_player.id || (counter_player && socket.id === counter_player.id)
             || (targeted_player && socket.id === targeted_player.id)) {
             lost_card = true;
+            //Vue
             let player = players.find(player => player.id === socket.id);
-            let player_cards = players_cards.find(player => player.id === socket.id);
-            let card = player_cards.cards[card_number];
             //Serveur
-            player_cards.cards[card_number] = false;
-            //Vue (client)
+            let player_cards = players_cards.find(player => player.id === socket.id);
+            //Carte perdue
+            let card = player_cards.cards[card_number].name;
+
+            //Serveur
+            player_cards.cards[card_number].active = false;
+            //Affichage des cartes globales (vue)
             player.cards[card_number] = card;
+
             //Le joueur n'a plus de cartes en jeu
-            if (!player_cards.cards[0] && !player_cards.cards[1]) {
+            if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
                 player.alive = false;
             }
             io.sockets.emit('refresh_players_game', players);
@@ -246,19 +251,19 @@ io.sockets.on('connection', function(socket) {
                                         let player = players.find(player => player.id === socket.id);
                                         let player_cards = players_cards.find(player => player.id === socket.id);
                                         let card;
-                                        if (player_cards.cards[0]) {
-                                            card = player_cards.cards[0];
+                                        if (player_cards.cards[0].active) {
+                                            card = player_cards.cards[0].name;
                                             player.cards[0] = card;
-                                            player_cards.cards[0] = false;
+                                            player_cards.cards[0].active = false;
                                         }
-                                        else if (player_cards.cards[1]) {
-                                            card = player_cards.cards[1];
+                                        else if (player_cards.cards[1].active) {
+                                            card = player_cards.cards[1].name;
                                             player.cards[1] = card;
-                                            player_cards.cards[1] = false;
+                                            player_cards.cards[1].active = false;
                                         }
 
                                         //Le joueur n'a plus de cartes en jeu
-                                        if (!player_cards.cards[0] && !player_cards.cards[1]) {
+                                        if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
                                             player.alive = false;
                                         }
                                         io.sockets.emit('refresh_players_game', players);
@@ -295,19 +300,19 @@ io.sockets.on('connection', function(socket) {
                                         let player = players.find(player => player.id === counter_player.id);
                                         let player_cards = players_cards.find(player => player.id === counter_player.id);
                                         let card;
-                                        if (player_cards.cards[0]) {
-                                            card = player_cards.cards[0];
+                                        if (player_cards.cards[0].active) {
+                                            card = player_cards.cards[0].name;
                                             player.cards[0] = card;
-                                            player_cards.cards[0] = false;
+                                            player_cards.cards[0].active = false;
                                         }
-                                        else if (player_cards.cards[1]) {
-                                            card = player_cards.cards[1];
+                                        else if (player_cards.cards[1].active) {
+                                            card = player_cards.cards[1].name;
                                             player.cards[1] = card;
-                                            player_cards.cards[1] = false;
+                                            player_cards.cards[1].active = false;
                                         }
 
                                         //Le joueur n'a plus de cartes en jeu
-                                        if (!player_cards.cards[0] && !player_cards.cards[1]) {
+                                        if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
                                             player.alive = false;
                                         }
                                         io.sockets.emit('refresh_players_game', players);
@@ -400,19 +405,19 @@ io.sockets.on('connection', function(socket) {
                     let player = players.find(player => player.id === target_player_id);
                     let player_cards = players_cards.find(player => player.id === target_player_id);
                     let card;
-                    if (player_cards.cards[0]) {
-                        card = player_cards.cards[0];
+                    if (player_cards.cards[0].active) {
+                        card = player_cards.cards[0].name;
                         player.cards[0] = card;
-                        player_cards.cards[0] = false;
+                        player_cards.cards[0].active = false;
                     }
-                    else if (player_cards.cards[1]) {
-                        card = player_cards.cards[1];
+                    else if (player_cards.cards[1].active) {
+                        card = player_cards.cards[1].name;
                         player.cards[1] = card;
-                        player_cards.cards[1] = false;
+                        player_cards.cards[1].active = false;
                     }
 
                     //Le joueur n'a plus de cartes en jeu
-                    if (!player_cards.cards[0] && !player_cards.cards[1]) {
+                    if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
                         player.alive = false;
                     }
                     io.sockets.emit('refresh_players_game', players);
@@ -437,7 +442,8 @@ function start_game() {
 
     //Affichage des cartes
     players_cards.forEach((player) => {
-        io.sockets.to(player.id).emit('cards', [player.cards[0], player.cards[1]]);
+        io.sockets.to(player.id).emit('cards', player.cards);
+        console.log(player.cards);
     });
 
     console.log("Partie lancée !");
@@ -451,7 +457,10 @@ function deal_players_cards() {
     players.forEach((player) => {
         players_cards.push({
             id: player.id,
-            cards: [deck[0], deck[1]]
+            cards: [
+                { name: deck[0], active: true },
+                { name: deck[1], active: true }
+                ]
         });
         deck.splice(0, 2);
     });
@@ -469,6 +478,10 @@ function next_turn_player() {
 
     if (count_alive === 1) {
         io.sockets.emit('action_message', player_winner.username + " gagne la partie !");
+        let player_winner_cards = players_cards.find(player => player.id === player_winner.id);
+        player_winner.cards[0] = player_winner_cards.cards[0].name;
+        player_winner.cards[1] = player_winner_cards.cards[1].name;
+        io.sockets.emit('refresh_players_game', players);
     }
     else {
         counter_player = undefined;
@@ -497,16 +510,16 @@ function next_turn_player() {
 
 function player_owns_card(pl, card) {
     let player = players_cards.find(player => player.id === pl.id);
-    if (player.cards[0] === card) {
-        deck.push(player.cards[0]);
-        player.cards[0] = deck[0];
-        io.sockets.to(pl.id).emit('cards', [player.cards[0], player.cards[1]]);
+    if (player.cards[0].name === card && player.cards[0].active) {
+        deck.push(player.cards[0].name);
+        player.cards[0].name = deck[0];
+        io.sockets.to(pl.id).emit('cards', player.cards);
         return true;
     }
-    else if (player.cards[1] === card) {
-        deck.push(player.cards[1]);
-        player.cards[1] = deck[0];
-        io.sockets.to(pl.id).emit('cards', [player.cards[0], player.cards[1]]);
+    else if (player.cards[1].name === card && player.cards[1].active) {
+        deck.push(player.cards[1].name);
+        player.cards[1].name = deck[0];
+        io.sockets.to(pl.id).emit('cards', players.cards);
         return true;
     }
     return false;

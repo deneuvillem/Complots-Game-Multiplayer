@@ -76,7 +76,15 @@ Vue.component('game', {
                     @click="target_player(player.id)">Cibler ce joueur</button>
             </div>
 
-            </p> Mes cartes: {{ cards[0] }} et {{ cards[1] }} </p>
+            <div>
+                <p> Mes cartes: </p>
+                <div v-if="cards[0]">
+                    <p v-if="cards[0].active"> {{ cards[0].name }} </p>
+                    <p v-else> {{ 'Not' + cards[0].name }} </p>
+                    <p v-if="cards[1].active"> {{ cards[1].name }} </p>
+                    <p v-else> {{ 'Not' + cards[1].name }} </p>
+                </div>
+            </div>
 
             <div v-if="my_turn_flag">
                 <p> C'est à votre tour de jouer ! </p>
@@ -108,8 +116,10 @@ Vue.component('game', {
 
             <div v-if="choice_cards_flag">
                 <p> Quelle carte perdre ? </p>
-                <button v-if="cards[0]" @click="lose_card(0)"> {{ cards[0] }} </button>
-                <button v-if="cards[1]" @click="lose_card(1)"> {{ cards[1] }} </button>
+                <div v-if="cards">
+                    <button v-if="cards[0].active" @click="lose_card(0)"> {{ cards[0].name }} </button>
+                    <button v-if="cards[1].active" @click="lose_card(1)"> {{ cards[1].name }} </button>
+                </div>
             </div>
 
         </div>
