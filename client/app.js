@@ -72,7 +72,7 @@ Vue.component('game', {
                 + En vie ? {{ player.alive }}
                 + Autorise le tour ? {{ player.autorise }}
                 </p>
-                <button v-show="target_player_flag && player.id!=current_player_id"
+                <button v-show="target_player_flag && player.id!=current_player_id && player.alive"
                     @click="target_player(player.id)">Cibler ce joueur</button>
             </div>
 
@@ -91,7 +91,7 @@ Vue.component('game', {
                 <button @click="revenu">Revenu</button>
                 <button @click="aide_etrangere">Aide étrangère</button>
                 <button @click="assassinat">Assassinat</button>
-                <button>Taxe</button>
+                <button @click="taxe">Taxe</button>
                 <button>Voler</button>
                 <button>Échanger</button>
                 <button>Assassine</button>
@@ -102,6 +102,10 @@ Vue.component('game', {
                 <div v-if="aide_etrangere_flag">
                     <button @click="autoriser">J'autorise</button>
                     <button @click="contrer">Je contre car j'ai un Duc</button>
+                </div>
+                <div v-if="taxe_flag">
+                    <button @click="autoriser">J'autorise</button>
+                    <button @click="contrer">Je mets en doute le Duc</button>
                 </div>
             </div>
             <p v-if="countdown_flag"> {{ countdown }} </p>
@@ -139,7 +143,8 @@ Vue.component('game', {
             choice_flag:false,
             choice_cards_flag: false,
             cards: [],
-            aide_etrangere_flag: false
+            aide_etrangere_flag: false,
+            taxe_flag: false
         }
     },
 
@@ -170,6 +175,9 @@ Vue.component('game', {
         },
         assassinat() {
             socket.emit('assassinat');
+        },
+        taxe() {
+            socket.emit('taxe');
         }
     },
 
@@ -216,6 +224,10 @@ Vue.component('game', {
 
         socket.on('target_player_flag', (bool) => {
             this.target_player_flag = bool;
+        });
+
+        socket.on('taxe_flag', (bool) => {
+            this.taxe_flag = bool;
         });
     }
 })
