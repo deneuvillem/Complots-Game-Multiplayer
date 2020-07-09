@@ -106,9 +106,6 @@ Vue.component('game', {
             </div>
             <p v-if="countdown_flag"> {{ countdown }} </p>
 
-            <p> Action effectuée: {{ action_message }} </p>
-            <p> Résultat: {{ action_message2 }} </p>
-
             <div v-if="choice_flag">
                 <button @click="truth">Il ou Elle dit la vérité</button>
                 <button @click="lie">Il ou Elle ment</button>
@@ -122,6 +119,8 @@ Vue.component('game', {
                 </div>
             </div>
 
+            <p v-for="message in action_messages"> {{ message }} </p>
+
         </div>
         `,
 
@@ -130,8 +129,7 @@ Vue.component('game', {
             players: [],
             current_player_id: '', //ID du joueur jouant le tour
             player_id: socket.id, //ID du Client
-            action_message: '',
-            action_message2: '',
+            action_messages: [],
 
             target_player_flag: false,
             countdown: 10,
@@ -188,12 +186,8 @@ Vue.component('game', {
             this.my_turn_flag = bool;
         });
 
-        socket.on('action_message', (message) => {
-            this.action_message = message;
-        });
-
-        socket.on('action_message2', (message) => {
-            this.action_message2 = message;
+        socket.on('action_messages', (message) => {
+            this.action_messages.unshift(message);
         });
 
         socket.on('countdown', (countdown) => {
