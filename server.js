@@ -70,6 +70,7 @@ io.sockets.on('connection', function(socket) {
         let player = players.find(player => player.id == socket.id);
         if (!player.ready) {
             player.ready = true;
+            socket.join('in_game'); //Joueur en jeu (room in_game)
             io.sockets.emit('refresh_players_lobby', players);
             count_ready_players++;
             if (count_ready_players == players.length && count_ready_players >= 2) {
@@ -82,6 +83,7 @@ io.sockets.on('connection', function(socket) {
         let player = players.find(player => player.id == socket.id);
         if (player.ready) {
             player.ready = false;
+            socket.leave('in_game'); //Joueur plus en jeu
             io.sockets.emit('refresh_players_lobby', players);
             count_ready_players--;
         }
@@ -93,11 +95,13 @@ io.sockets.on('connection', function(socket) {
         if (disconnected_player != undefined && game_started) {
             console.log("Le joueur " + disconnected_player.username + " s'est déconnecté en jeu!");
             disconnected_player.alive = false;
+            socket.leave('in_game'); //Joueur plus en jeu
             io.sockets.emit('refresh_players_game', players);  
         }
         //Si joueur déconnecté dans le lobby
         else if (disconnected_player != undefined) {
             console.log("Le joueur " + disconnected_player.username + " s'est déconnecté du lobby!");
+            socket.leave('in_game'); //Joueur plus en jeu
             players.splice(players.findIndex(player => player.id == socket.id), 1);
             io.sockets.emit('refresh_players_lobby', players); 
         }
@@ -148,6 +152,7 @@ io.sockets.on('connection', function(socket) {
             //Le joueur n'a plus de cartes en jeu
             if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
                 player.alive = false;
+                socket.leave('in_game');
             }
             io.sockets.emit('refresh_players_game', players);
             socket.emit('choice_cards_flag', false);
@@ -172,7 +177,7 @@ io.sockets.on('connection', function(socket) {
             already_played = true;
             socket.emit('my_turn_flag', false);
             io.sockets.emit('countdown_flag', true);
-            socket.broadcast.emit('aide_etrangere_flag', true);
+            socket.broadcast.to('in_game').emit('aide_etrangere_flag', true);
             io.sockets.emit('action_messages', current_player.username + " veut utiliser l'aide étrangère !");
             let countdown = 10;
             
@@ -187,7 +192,7 @@ io.sockets.on('connection', function(socket) {
                     io.sockets.emit('refresh_players_game', players);
                     io.sockets.emit('action_messages', current_player.username + " gagne deux pièces ! (Aide étrangère)");
                     io.sockets.emit('countdown_flag', false);
-                    socket.broadcast.emit('aide_etrangere_flag', false);
+                    socket.broadcast.to('in_game').emit('aide_etrangere_flag', false);
                     already_played = false;
                     console.log("Tout le monde a autorisé !");
                     next_turn_player();
@@ -199,7 +204,7 @@ io.sockets.on('connection', function(socket) {
                     io.sockets.emit('countdown_flag', false);
                     io.sockets.emit('action_messages', counter_player.username + " contre " + current_player.username
                         + " et prétend avoir un Duc !");
-                    socket.broadcast.emit('aide_etrangere_flag', false);
+                    socket.broadcast.to('in_game').emit('aide_etrangere_flag', false);
 
                     //Demander au joueur courant si le joueur qui contre ment ou pas
                     io.sockets.emit('countdown_flag', true);
@@ -266,6 +271,7 @@ io.sockets.on('connection', function(socket) {
                                         //Le joueur n'a plus de cartes en jeu
                                         if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
                                             player.alive = false;
+                                            socket.leave('in_game');
                                         }
                                         io.sockets.emit('refresh_players_game', players);
                                         socket.emit('choice_cards_flag', false);
@@ -315,6 +321,8 @@ io.sockets.on('connection', function(socket) {
                                         //Le joueur n'a plus de cartes en jeu
                                         if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
                                             player.alive = false;
+                                            let socket_counter_player = io.sockets.connected[counter_player.id];
+                                            socket_counter_player.leave('in_game');
                                         }
                                         io.sockets.emit('refresh_players_game', players);
                                         io.sockets.to(counter_player.id).emit('choice_cards_flag', false);
@@ -346,7 +354,7 @@ io.sockets.on('connection', function(socket) {
                     io.sockets.emit('refresh_players_game', players);
                     io.sockets.emit('action_messages', current_player.username + " gagne deux pièces ! (Aide étrangère)");
                     io.sockets.emit('countdown_flag', false);
-                    socket.broadcast.emit('aide_etrangere_flag', false);
+                    socket.broadcast.to('in_game').emit('aide_etrangere_flag', false);
                     already_played = false;
                     console.log("Tout le monde a autorisé !");
                     next_turn_player();
@@ -420,6 +428,8 @@ io.sockets.on('connection', function(socket) {
                     //Le joueur n'a plus de cartes en jeu
                     if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
                         player.alive = false;
+                        let socket_target_player = io.sockets.connected[target_player_id];
+                        socket_target_player.leave('in_game');
                     }
                     io.sockets.emit('refresh_players_game', players);
                     io.sockets.to(target_player_id).emit('choice_cards_flag', false);
@@ -436,7 +446,7 @@ io.sockets.on('connection', function(socket) {
             already_played = true;
             socket.emit('my_turn_flag', false);
             io.sockets.emit('countdown_flag', true);
-            socket.broadcast.emit('taxe_flag', true);
+            socket.broadcast.to('in_game').emit('taxe_flag', true);
             io.sockets.emit('action_messages', current_player.username + " veut collecter les taxes !");
             let countdown = 10;
             
@@ -451,7 +461,7 @@ io.sockets.on('connection', function(socket) {
                     io.sockets.emit('refresh_players_game', players);
                     io.sockets.emit('action_messages', current_player.username + " gagne trois pièces ! (Taxe)");
                     io.sockets.emit('countdown_flag', false);
-                    socket.broadcast.emit('taxe_flag', false);
+                    socket.broadcast.to('in_game').emit('taxe_flag', false);
                     console.log("Tout le monde a autorisé !");
                     next_turn_player();
                 }
@@ -462,7 +472,7 @@ io.sockets.on('connection', function(socket) {
                     io.sockets.emit('countdown_flag', false);
                     io.sockets.emit('action_messages', counter_player.username + " met en doute " + current_player.username
                         + " et le défie de montrer son Duc !");
-                    socket.broadcast.emit('taxe_flag', false);
+                    socket.broadcast.to('in_game').emit('taxe_flag', false);
 
                     //Le joueur courant possède la carte Duc
                     if (player_owns_card(current_player, 'Duc')) {
@@ -505,6 +515,8 @@ io.sockets.on('connection', function(socket) {
                                 //Le joueur n'a plus de cartes en jeu
                                 if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
                                     player.alive = false;
+                                    let socket_counter_player = io.sockets.connected[counter_player.id];
+                                    socket_counter_player.leave('in_game');
                                 }
                                 io.sockets.emit('refresh_players_game', players);
                                 io.to(counter_player.id).emit('choice_cards_flag', false);
@@ -555,6 +567,8 @@ io.sockets.on('connection', function(socket) {
                                 //Le joueur n'a plus de cartes en jeu
                                 if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
                                     player.alive = false;
+                                    let socket_current_player = io.sockets.connected[current_player.id];
+                                    socket_current_player.leave('in_game');
                                 }
                                 io.sockets.emit('refresh_players_game', players);
                                 io.sockets.to(current_player.id).emit('choice_cards_flag', false);
@@ -573,7 +587,7 @@ io.sockets.on('connection', function(socket) {
                     io.sockets.emit('refresh_players_game', players);
                     io.sockets.emit('action_messages', current_player.username + " gagne trois pièces ! (Taxe)");
                     io.sockets.emit('countdown_flag', false);
-                    socket.broadcast.emit('taxe_flag', false);
+                    socket.broadcast.to('in_game').emit('taxe_flag', false);
                     console.log("Tout le monde a autorisé !");
                     next_turn_player();
                 }
@@ -683,7 +697,7 @@ function player_owns_card(pl, card) {
 function all_players_autorised() {
     let flag = false;
     players.forEach((player) => {
-        if (player.id !== current_player.id && !player.autorise) {
+        if (player.id !== current_player.id && player.alive && !player.autorise) {
             console.log(player.autorise);
             console.log(player.username);
             flag = true
