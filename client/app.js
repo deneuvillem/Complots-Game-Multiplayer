@@ -92,7 +92,7 @@ Vue.component('game', {
                 <button @click="aide_etrangere">Aide étrangère</button>
                 <button @click="assassinat">Assassinat</button>
                 <button @click="taxe">Taxe</button>
-                <button>Voler</button>
+                <button @click="voler">Voler</button>
                 <button>Échanger</button>
                 <button>Assassine</button>
             </div>
@@ -106,6 +106,17 @@ Vue.component('game', {
                 <div v-if="taxe_flag">
                     <button @click="autoriser">J'autorise</button>
                     <button @click="contrer">Je mets en doute le Duc</button>
+                </div>
+                <div v-if="voler_flag">
+                    <button @click="autoriser">J'autorise</button>
+                    <button @click="contrer">Je mets en doute le Capitaine</button>
+                    <button v-if="voler_flag_targeted_player" @click="contrer_voler_capitaine">J'ai un Capitaine</button>
+                    <button v-if="voler_flag_targeted_player" @click="contrer_voler_ambassadeur">J'ai un Ambassadeur</button>
+                </div>
+                <div v-if="voler_flag_targeted_player">
+                    <button @click="autoriser">J'autorise</button>
+                    <button @click="contrer_voler_capitaine">J'ai un Capitaine</button>
+                    <button @click="contrer_voler_ambassadeur">J'ai un Ambassadeur</button>
                 </div>
             </div>
             <p v-if="countdown_flag"> {{ countdown }} </p>
@@ -136,6 +147,7 @@ Vue.component('game', {
             action_messages: [],
 
             target_player_flag: false,
+            target_type: '',
             countdown: 10,
             countdown_flag: false,
             contrer_flag: false,
@@ -144,13 +156,20 @@ Vue.component('game', {
             choice_cards_flag: false,
             cards: [],
             aide_etrangere_flag: false,
-            taxe_flag: false
+            taxe_flag: false,
+            voler_flag: false,
+            voler_flag_targeted_player: false
         }
     },
 
     methods: {
         target_player(id) {
-            socket.emit('assassinat_player', id);
+            if (this.target_type === 'assassinat') {
+                socket.emit('assassinat_player', id);
+            }
+            else if (this.target_type === 'voler') {
+                socket.emit('voler_player', id);
+            }
         },
         revenu() {
             socket.emit('revenu');
@@ -178,6 +197,15 @@ Vue.component('game', {
         },
         taxe() {
             socket.emit('taxe');
+        },
+        voler() {
+            socket.emit('voler');
+        },
+        contrer_voler_capitaine() {
+            socket.emit('contrer_voler_capitaine');
+        },
+        contrer_voler_ambassadeur() {
+            socket.emit('contrer_voler_ambassadeur');
         }
     },
 
@@ -228,6 +256,18 @@ Vue.component('game', {
 
         socket.on('taxe_flag', (bool) => {
             this.taxe_flag = bool;
+        });
+
+        socket.on('target_type', (type) => {
+            this.target_type = type;
+        });
+
+        socket.on('voler_flag', (bool) => {
+            this.voler_flag = bool;
+        });
+
+        socket.on('voler_flag_targeted_player', (bool) => {
+            this.voler_flag_targeted_player = bool;
         });
     }
 })
