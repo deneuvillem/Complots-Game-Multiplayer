@@ -93,32 +93,41 @@ Vue.component('game', {
                 <button @click="assassinat">Assassinat</button>
                 <button @click="taxe">Taxe</button>
                 <button @click="voler">Voler</button>
-                <button>Échanger</button>
+                <button @click="echanger">Échanger</button>
                 <button>Assassine</button>
             </div>
 
             <div v-else>
                 <p> {{ current_player_id }} joue !</p>
-                <div v-if="aide_etrangere_flag">
-                    <button @click="autoriser">J'autorise</button>
-                    <button @click="contrer">Je contre car j'ai un Duc</button>
-                </div>
-                <div v-if="taxe_flag">
-                    <button @click="autoriser">J'autorise</button>
-                    <button @click="contrer">Je mets en doute le Duc</button>
-                </div>
-                <div v-if="voler_flag">
-                    <button @click="autoriser">J'autorise</button>
-                    <button @click="contrer">Je mets en doute le Capitaine</button>
-                    <button v-if="voler_flag_targeted_player" @click="contrer_voler_capitaine">J'ai un Capitaine</button>
-                    <button v-if="voler_flag_targeted_player" @click="contrer_voler_ambassadeur">J'ai un Ambassadeur</button>
-                </div>
-                <div v-if="voler_flag_targeted_player">
-                    <button @click="autoriser">J'autorise</button>
-                    <button @click="contrer_voler_capitaine">J'ai un Capitaine</button>
-                    <button @click="contrer_voler_ambassadeur">J'ai un Ambassadeur</button>
-                </div>
             </div>
+            
+            <div v-if="aide_etrangere_flag">
+                <button @click="autoriser">J'autorise</button>
+                <button @click="contrer">Je contre car j'ai un Duc</button>
+            </div>
+
+            <div v-if="taxe_flag">
+                <button @click="autoriser">J'autorise</button>
+                <button @click="contrer">Je mets en doute le Duc</button>
+            </div>
+
+            <div v-if="voler_flag">
+                <button @click="autoriser">J'autorise</button>
+                <button @click="contrer">Je mets en doute le Capitaine</button>
+                <button v-if="voler_flag_targeted_player" @click="contrer_voler_capitaine">J'ai un Capitaine</button>
+                <button v-if="voler_flag_targeted_player" @click="contrer_voler_ambassadeur">J'ai un Ambassadeur</button>
+            </div>
+            <div v-if="voler_flag_targeted_player">
+                <button @click="autoriser">J'autorise</button>
+                <button @click="contrer_voler_capitaine">J'ai un Capitaine</button>
+                <button @click="contrer_voler_ambassadeur">J'ai un Ambassadeur</button>
+            </div>
+
+            <div v-if="echanger_flag">
+                <button @click="autoriser">J'autorise</button>
+                <button @click="contrer">Je mets en doute l'Ambassadeur</button>
+            </div>
+
             <p v-if="countdown_flag"> {{ countdown }} </p>
 
             <div v-if="choice_flag">
@@ -132,6 +141,18 @@ Vue.component('game', {
                     <button v-if="cards[0].active" @click="lose_card(0)"> {{ cards[0].name }} </button>
                     <button v-if="cards[1].active" @click="lose_card(1)"> {{ cards[1].name }} </button>
                 </div>
+            </div>
+
+            <div v-if="echanger_cards_flag">
+                <p> Cartes disponibles: </p>
+                <div v-for="card in echanger_cards">
+                    <button v-if="!card.picked" @click="pick_card(card.id)">{{ card.name }}</button>
+                </div>
+                <p> Cartes choisies: </p>
+                <div v-for="card in echanger_cards">
+                    <button v-if="card.picked" @click="unpick_card(card.id)">{{ card.name }}</button>
+                </div>
+                <button @click="confirmer_cards">Confirmer les cartes</button>
             </div>
 
             <p v-for="message in action_messages"> {{ message }} </p>
@@ -158,7 +179,10 @@ Vue.component('game', {
             aide_etrangere_flag: false,
             taxe_flag: false,
             voler_flag: false,
-            voler_flag_targeted_player: false
+            voler_flag_targeted_player: false,
+            echanger_flag: false,
+            echanger_cards_flag: false,
+            echanger_cards: []
         }
     },
 
@@ -206,6 +230,20 @@ Vue.component('game', {
         },
         contrer_voler_ambassadeur() {
             socket.emit('contrer_voler_ambassadeur');
+        },
+        echanger() {
+            socket.emit('echanger');
+        },
+        pick_card(id) {
+            socket.emit('pick_card', id);
+            this.echanger_cards.find(card => card.id === id).picked = true;
+        },
+        unpick_card(id) {
+            socket.emit('unpick_card', id);
+            this.echanger_cards.find(card => card.id === id).picked = false;
+        },
+        confirmer_cards() {
+            socket.emit('confirmer_cards');
         }
     },
 
@@ -268,6 +306,18 @@ Vue.component('game', {
 
         socket.on('voler_flag_targeted_player', (bool) => {
             this.voler_flag_targeted_player = bool;
+        });
+
+        socket.on('echanger_flag', (bool) => {
+            this.echanger_flag = bool;
+        });
+
+        socket.on('echanger_cards_flag', (bool) => {
+            this.echanger_cards_flag = bool;
+        });
+
+        socket.on('echanger_cards', (cards) => {
+            this.echanger_cards = cards;
         });
     }
 })

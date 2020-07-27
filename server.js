@@ -45,6 +45,11 @@ var targeted_player;
 var contrer_voler_capitaine = false;
 var contrer_voler_ambassadeur = false;
 
+//ECHANGEr CARTES
+var echange_cards = [];
+var picked_cards = [];
+var picked_cards_flag = false;
+
 //////////////////////////////////////////
 
 io.sockets.on('connection', function (socket) {
@@ -121,6 +126,7 @@ io.sockets.on('connection', function (socket) {
             socket.emit('taxe_flag', false);
             socket.emit('voler_flag', false);
             socket.emit('voler_flag_targeted_player', false);
+            socket.emit('echanger_flag', false);
         }
     });
 
@@ -641,7 +647,8 @@ io.sockets.on('connection', function (socket) {
                 io.sockets.emit('countdown', countdown);
                 console.log(countdown);
 
-                //Si tous les joueurs autorisent le tour
+                //////////////////////////////////////////////////////////////////////
+                ////////////Si tous les joueurs autorisent le tour///////////////////
                 if (all_players_autorised()) {
                     clearInterval(myTimer);
                     io.sockets.emit('countdown_flag', false);
@@ -871,7 +878,8 @@ io.sockets.on('connection', function (socket) {
                     }, 1000);
                 }
 
-                //Un joueur met en doute le Capitaine du joueur courant
+                //////////////////////////////////////////////////////////////////////
+                ///////////Un joueur met en doute le Capitaine du joueur courant/////
                 else if (counter_player && counter_player.id !== current_player.id) {
                     clearInterval(myTimer);
                     io.sockets.emit('countdown_flag', false);
@@ -1440,7 +1448,8 @@ io.sockets.on('connection', function (socket) {
                     }
                 }
 
-                //A la fin du compteur, tout le monde autorise par défaut
+                //////////////////////////////////////////////////////////////////////
+                ////////A la fin du compteur, tout le monde autorise par défaut//////
                 else if (--countdown < 0) {
                     clearInterval(myTimer);
                     io.sockets.emit('countdown_flag', false);
@@ -1675,6 +1684,284 @@ io.sockets.on('connection', function (socket) {
         }
     });
 
+    socket.on('pick_card', function (id) {
+        if (socket.id === current_player.id && 0 <= id <= 3) {
+            if (echange_cards.length === 3 && picked_cards.length === 0) {
+                let card = echange_cards.find(card => card.id === id).name;
+                picked_cards.push(card);
+                console.log(card);
+            }
+            else if (echange_cards.length === 4 && picked_cards.length <= 1) {
+                let card = echange_cards.find(card => card.id === id).name;
+                picked_cards.push(card);
+                console.log(card);
+            }
+            else {
+                console.log('Ajout de la carte impossible');
+            }
+        }
+    });
+
+    socket.on('unpick_card', function (id) {
+        if (socket.id === current_player.id && 0 <= id <= 3 && picked_cards.length >= 1) {
+            let card = echange_cards.find(card => card.id === id).name;
+            console.log(card);
+            picked_cards.splice(picked_cards.findIndex(c => c === card), 1);
+        }
+    });
+
+    socket.on('confirmer_cards', function () {
+        if (socket.id === current_player.id && picked_cards.length <= 2) {
+            socket.emit('echanger_cards_flag', false);
+            let player_cards = players_cards.find(player => player.id === socket.id);
+            console.log('Nombre de cartes choisies: ' + picked_cards.length);
+
+            if (picked_cards.length === 1 && echange_cards.length == 3) {
+                if (player_cards.cards[0].active) {
+                    player_cards.cards[0].name = picked_cards[0];
+                }
+                else if (player_cards.cards[1].active) {
+                    player_cards.cards[1].name = picked_cards[0];
+                }
+                echange_cards.splice(echange_cards.findIndex(c => c.name === picked_cards[0]), 1);
+                echange_cards.forEach((card) => {
+                    deck.push(card.name);
+                });
+                console.log(picked_cards);
+                console.log(deck);
+                console.log(player_cards.cards);
+            }
+            else if (picked_cards.length === 2 && echange_cards.length === 4) {
+                player_cards.cards[0].name = picked_cards[0];
+                player_cards.cards[1].name = picked_cards[1];
+                echange_cards.splice(echange_cards.findIndex(c => c.name === picked_cards[0]), 1);
+                echange_cards.splice(echange_cards.findIndex(c => c.name === picked_cards[1]), 1);
+                echange_cards.forEach((card) => {
+                    deck.push(card.name);
+                });
+                console.log(picked_cards);
+                console.log(deck);
+                console.log(player_cards.cards);
+            }
+            else {
+                console.log('Erreur de répartition des cartes');
+            }
+            socket.emit('cards', player_cards.cards);
+            picked_cards_flag = true;
+        }
+    });
+
+    socket.on('echanger', function () {
+        if (socket.id === current_player.id && !already_played && echange_cards.length === 0) {
+            already_played = true;
+            socket.emit('my_turn_flag', false);
+            io.sockets.emit('countdown_flag', true);
+            socket.broadcast.to('in_game').emit('echanger_flag', true);
+            io.sockets.emit('action_messages', current_player.username + " veut échanger ses cartes !");
+            let countdown = 10;
+
+            let myTimer = setInterval(() => {
+                io.sockets.emit('countdown', countdown);
+                console.log(countdown);
+
+                //Si tous les joueurs autorisent le tour
+                if (all_players_autorised()) {
+                    clearInterval(myTimer);
+                    io.sockets.emit('countdown_flag', false);
+                    io.sockets.emit('action_messages', current_player.username + " va échanger ses cartes ! (Échange)");
+                    socket.emit('echanger_cards_flag', true);
+
+                    let player_cards = players_cards.find(player => player.id === socket.id).cards;
+                    //Une ou deux cartes du joueur courant
+                    if (player_cards[0].active) {
+                        echange_cards.push({
+                            id: 0,
+                            name: player_cards[0].name,
+                            picked: false
+                        });
+                    }
+                    if (player_cards[1].active) {
+                        echange_cards.push({
+                            id: 1,
+                            name: player_cards[1].name,
+                            picked: false
+                        });
+                    }
+                    //2 premières cartes du deck
+                    echange_cards.push({
+                        id: 2,
+                        name: deck[0],
+                        picked: false
+                    });
+                    echange_cards.push({
+                        id: 3,
+                        name: deck[1],
+                        picked: false
+                    });
+                    deck.shift();
+                    deck.shift();
+
+                    socket.emit('echanger_cards', echange_cards);
+                    socket.emit('echanger_cards_flag', true);
+                    console.log(echange_cards);
+                    
+                    countdown = 10;
+                    io.sockets.emit('countdown_flag', true);
+                    let myTimer2 = setInterval(() => {
+                        io.sockets.emit('countdown', countdown);
+                        console.log(countdown);
+
+                        //Le joueur courant a échangé ses cartes
+                        if (picked_cards_flag) {
+                            clearInterval(myTimer2);
+                            io.sockets.emit('countdown_flag', false);
+                            io.sockets.emit('action_messages', current_player.username + " a échangé ses cartes !");
+                            next_turn_player();
+                        }
+
+                        //A la fin du compteur, le joueur garde ses cartes initiales
+                        else if (--countdown < 0) {
+                            clearInterval(myTimer2);
+                            io.sockets.emit('countdown_flag', false);
+                            io.sockets.emit('action_messages', current_player.username + " n'a pas eu le temps d'échanger ses cartes !");
+                            socket.emit('echanger_cards_flag', false);
+                            next_turn_player();
+                        }   
+                    }, 1000);
+                    
+                }
+
+                //Un joueur contre l'action du joueur courant
+                else if (counter_player && counter_player.id !== current_player.id) {
+                    clearInterval(myTimer);
+                    io.sockets.emit('countdown_flag', false);
+                    io.sockets.emit('action_messages', counter_player.username + " met en doute " + current_player.username
+                        + " et le défie de montrer son Ambassadeur !");
+                    socket.broadcast.to('in_game').emit('echanger_flag', false);
+
+                    //Le joueur courant possède la carte Ambassadeur
+                    if (player_owns_card(current_player, 'Ambassadeur')) {
+                        io.sockets.emit('action_messages', current_player.username + " possédait bien un Ambassadeur donc "
+                            + counter_player.username + " va perdre une carte !");
+                        io.to(counter_player.id).emit('choice_cards_flag', true);
+
+                        //Timer de perte de carte du joueur qui contre
+                        io.sockets.emit('countdown_flag', true);
+                        countdown = 10;
+                        let myTimer2 = setInterval(() => {
+                            io.sockets.emit('countdown', countdown);
+                            console.log(countdown);
+
+                            //Le joueur qui contre choisit sa carte à perdre
+                            if (lost_card) {
+                                clearInterval(myTimer2);
+                                io.sockets.emit('countdown_flag', false);
+                                next_turn_player();
+                            }
+
+                            //Temp écoulé: le joueur qui contre perd sa première ou sa deuxième carte
+                            else if (--countdown < 0) {
+                                clearInterval(myTimer2);
+                                io.sockets.emit('countdown_flag', false);
+                                let player = players.find(player => player.id === counter_player.id);
+                                let player_cards = players_cards.find(player => player.id === counter_player.id);
+                                let card;
+                                if (player_cards.cards[0].active) {
+                                    card = player_cards.cards[0].name;
+                                    player.cards[0] = card;
+                                    player_cards.cards[0].active = false;
+                                }
+                                else if (player_cards.cards[1].active) {
+                                    card = player_cards.cards[1].name;
+                                    player.cards[1] = card;
+                                    player_cards.cards[1].active = false;
+                                }
+
+                                //Le joueur n'a plus de cartes en jeu
+                                if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
+                                    player.alive = false;
+                                    let socket_counter_player = io.sockets.connected[counter_player.id];
+                                    socket_counter_player.leave('in_game');
+                                }
+                                io.sockets.emit('refresh_players_game', players);
+                                io.to(counter_player.id).emit('choice_cards_flag', false);
+                                io.sockets.emit('action_messages', player.username + " perd son/sa " + card);
+                                io.to(counter_player.id).emit('cards', player_cards.cards);
+                                next_turn_player();
+                            }
+                        }, 1000);
+                    }
+
+                    //Le joueur courant n'a pas la carte Ambassadeur
+                    else {
+                        io.sockets.emit('action_messages', current_player.username + " a menti et va perdre une carte !");
+                        socket.emit('choice_cards_flag', true);
+
+                        //Timer de perte de carte du joueur courant
+                        io.sockets.emit('countdown_flag', true);
+                        countdown = 10;
+                        let myTimer2 = setInterval(() => {
+                            io.sockets.emit('countdown', countdown);
+                            console.log(countdown);
+
+                            //Le joueur courant choisit sa carte à perdre
+                            if (lost_card) {
+                                clearInterval(myTimer2);
+                                io.sockets.emit('countdown_flag', false);
+                                next_turn_player();
+                            }
+
+                            //Temp écoulé: le joueur courant perd sa première ou sa deuxième carte
+                            else if (--countdown < 0) {
+                                clearInterval(myTimer2);
+                                io.sockets.emit('countdown_flag', false);
+                                let player = players.find(player => player.id === current_player.id);
+                                let player_cards = players_cards.find(player => player.id === current_player.id);
+                                let card;
+                                if (player_cards.cards[0].active) {
+                                    card = player_cards.cards[0].name;
+                                    player.cards[0] = card;
+                                    player_cards.cards[0].active = false;
+                                }
+                                else if (player_cards.cards[1].active) {
+                                    card = player_cards.cards[1].name;
+                                    player.cards[1] = card;
+                                    player_cards.cards[1].active = false;
+                                }
+
+                                //Le joueur n'a plus de cartes en jeu
+                                if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
+                                    player.alive = false;
+                                    let socket_current_player = io.sockets.connected[current_player.id];
+                                    socket_current_player.leave('in_game');
+                                }
+                                io.sockets.emit('refresh_players_game', players);
+                                io.sockets.to(current_player.id).emit('choice_cards_flag', false);
+                                io.sockets.emit('action_messages', player.username + " perd son/sa " + card);
+                                io.sockets.to(current_player.id).emit('cards', player_cards.cards);
+                                next_turn_player();
+                            }
+                        }, 1000);
+                    }
+                }
+
+                //A la fin du compteur, tout le monde autorise par défaut
+                else if (--countdown < 0) {
+                    clearInterval(myTimer);
+                    /*
+                    current_player.pieces += 3;
+                    io.sockets.emit('refresh_players_game', players);
+                    io.sockets.emit('action_messages', current_player.username + " gagne trois pièces ! (Taxe)");
+                    io.sockets.emit('countdown_flag', false);
+                    socket.broadcast.to('in_game').emit('taxe_flag', false);
+                    console.log("Tout le monde a autorisé !");
+                    */
+                    next_turn_player();
+                }
+            }, 1000);
+        }
+    });
+
 });
 
 
@@ -1737,6 +2024,9 @@ function next_turn_player() {
         lost_card = false;
         contrer_voler_capitaine = false;
         contrer_voler_ambassadeur = false;
+        echange_cards = [];
+        picked_cards = [];
+        picked_cards_flag = false;
         players.forEach((player) => {
             player.autorise = false;
         });
