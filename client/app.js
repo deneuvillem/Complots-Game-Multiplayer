@@ -182,7 +182,8 @@ Vue.component('game', {
             voler_flag_targeted_player: false,
             echanger_flag: false,
             echanger_cards_flag: false,
-            echanger_cards: []
+            echanger_cards: [],
+            count_picked_cards: 0
         }
     },
 
@@ -235,15 +236,23 @@ Vue.component('game', {
             socket.emit('echanger');
         },
         pick_card(id) {
-            socket.emit('pick_card', id);
-            this.echanger_cards.find(card => card.id === id).picked = true;
+            if ((this.echanger_cards.length === 4 && this.count_picked_cards <= 1)
+                || (this.echanger_cards.length === 3 && this.count_picked_cards === 0)) {
+                socket.emit('pick_card', id);
+                this.echanger_cards.find(card => card.id === id).picked = true;
+                this.count_picked_cards++;
+            }
         },
         unpick_card(id) {
             socket.emit('unpick_card', id);
             this.echanger_cards.find(card => card.id === id).picked = false;
+            this.count_picked_cards--;
         },
         confirmer_cards() {
-            socket.emit('confirmer_cards');
+            if ((this.count_picked_cards === 1 && this.echanger_cards.length == 3)
+                || (this.count_picked_cards === 2 && this.echanger_cards.length === 4)) {
+                socket.emit('confirmer_cards');
+            }
         }
     },
 
@@ -318,6 +327,10 @@ Vue.component('game', {
 
         socket.on('echanger_cards', (cards) => {
             this.echanger_cards = cards;
+        });
+
+        socket.on('count_picked_cards', (number) => {
+            this.count_picked_cards = number;
         });
     }
 })

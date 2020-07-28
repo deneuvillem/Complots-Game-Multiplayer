@@ -1747,6 +1747,7 @@ io.sockets.on('connection', function (socket) {
                 console.log('Erreur de répartition des cartes');
             }
             socket.emit('cards', player_cards.cards);
+            socket.emit('count_picked_cards', 0);
             picked_cards_flag = true;
         }
     });
@@ -1768,9 +1769,10 @@ io.sockets.on('connection', function (socket) {
                 if (all_players_autorised()) {
                     clearInterval(myTimer);
                     io.sockets.emit('countdown_flag', false);
+
+                    //ECHANGER CARTES
                     io.sockets.emit('action_messages', current_player.username + " va échanger ses cartes ! (Échange)");
                     socket.emit('echanger_cards_flag', true);
-
                     let player_cards = players_cards.find(player => player.id === socket.id).cards;
                     //Une ou deux cartes du joueur courant
                     if (player_cards[0].active) {
@@ -1825,6 +1827,14 @@ io.sockets.on('connection', function (socket) {
                             io.sockets.emit('countdown_flag', false);
                             io.sockets.emit('action_messages', current_player.username + " n'a pas eu le temps d'échanger ses cartes !");
                             socket.emit('echanger_cards_flag', false);
+
+                            //Remet les 2 cartes prises du deck à la fin de celui-ci
+                            deck.push(echange_cards.find(card => card.id === 2).name);
+                            deck.push(echange_cards.find(card => card.id === 3).name);
+                            console.log(picked_cards);
+                            console.log(deck);
+
+                            socket.emit('count_picked_cards', 0);
                             next_turn_player();
                         }   
                     }, 1000);
@@ -1948,15 +1958,77 @@ io.sockets.on('connection', function (socket) {
                 //A la fin du compteur, tout le monde autorise par défaut
                 else if (--countdown < 0) {
                     clearInterval(myTimer);
-                    /*
-                    current_player.pieces += 3;
-                    io.sockets.emit('refresh_players_game', players);
-                    io.sockets.emit('action_messages', current_player.username + " gagne trois pièces ! (Taxe)");
                     io.sockets.emit('countdown_flag', false);
-                    socket.broadcast.to('in_game').emit('taxe_flag', false);
-                    console.log("Tout le monde a autorisé !");
-                    */
-                    next_turn_player();
+                    socket.broadcast.to('in_game').emit('echanger_flag', false);
+
+                    //ECHANGER CARTES
+                    io.sockets.emit('action_messages', current_player.username + " va échanger ses cartes ! (Échange)");
+                    socket.emit('echanger_cards_flag', true);
+                    let player_cards = players_cards.find(player => player.id === socket.id).cards;
+                    //Une ou deux cartes du joueur courant
+                    if (player_cards[0].active) {
+                        echange_cards.push({
+                            id: 0,
+                            name: player_cards[0].name,
+                            picked: false
+                        });
+                    }
+                    if (player_cards[1].active) {
+                        echange_cards.push({
+                            id: 1,
+                            name: player_cards[1].name,
+                            picked: false
+                        });
+                    }
+                    //2 premières cartes du deck
+                    echange_cards.push({
+                        id: 2,
+                        name: deck[0],
+                        picked: false
+                    });
+                    echange_cards.push({
+                        id: 3,
+                        name: deck[1],
+                        picked: false
+                    });
+                    deck.shift();
+                    deck.shift();
+
+                    socket.emit('echanger_cards', echange_cards);
+                    socket.emit('echanger_cards_flag', true);
+                    console.log(echange_cards);
+                    
+                    countdown = 10;
+                    io.sockets.emit('countdown_flag', true);
+                    let myTimer2 = setInterval(() => {
+                        io.sockets.emit('countdown', countdown);
+                        console.log(countdown);
+
+                        //Le joueur courant a échangé ses cartes
+                        if (picked_cards_flag) {
+                            clearInterval(myTimer2);
+                            io.sockets.emit('countdown_flag', false);
+                            io.sockets.emit('action_messages', current_player.username + " a échangé ses cartes !");
+                            next_turn_player();
+                        }
+
+                        //A la fin du compteur, le joueur garde ses cartes initiales
+                        else if (--countdown < 0) {
+                            clearInterval(myTimer2);
+                            io.sockets.emit('countdown_flag', false);
+                            io.sockets.emit('action_messages', current_player.username + " n'a pas eu le temps d'échanger ses cartes !");
+                            socket.emit('echanger_cards_flag', false);
+
+                            //Remet les 2 cartes prises du deck à la fin de celui-ci
+                            deck.push(echange_cards.find(card => card.id === 2).name);
+                            deck.push(echange_cards.find(card => card.id === 3).name);
+                            console.log(picked_cards);
+                            console.log(deck);
+
+                            socket.emit('count_picked_cards', 0);
+                            next_turn_player();
+                        }   
+                    }, 1000);
                 }
             }, 1000);
         }
