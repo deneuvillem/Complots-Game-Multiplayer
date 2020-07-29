@@ -94,7 +94,7 @@ Vue.component('game', {
                 <button @click="taxe">Taxe</button>
                 <button @click="voler">Voler</button>
                 <button @click="echanger">Échanger</button>
-                <button>Assassine</button>
+                <button @click="assassine">Assassine</button>
             </div>
 
             <div v-else>
@@ -103,7 +103,7 @@ Vue.component('game', {
             
             <div v-if="aide_etrangere_flag">
                 <button @click="autoriser">J'autorise</button>
-                <button @click="contrer">Je contre car j'ai un Duc</button>
+                <button @click="contrer">Je contre avec mon Duc</button>
             </div>
 
             <div v-if="taxe_flag">
@@ -114,18 +114,25 @@ Vue.component('game', {
             <div v-if="voler_flag">
                 <button @click="autoriser">J'autorise</button>
                 <button @click="contrer">Je mets en doute le Capitaine</button>
-                <button v-if="voler_flag_targeted_player" @click="contrer_voler_capitaine">J'ai un Capitaine</button>
-                <button v-if="voler_flag_targeted_player" @click="contrer_voler_ambassadeur">J'ai un Ambassadeur</button>
             </div>
             <div v-if="voler_flag_targeted_player">
                 <button @click="autoriser">J'autorise</button>
-                <button @click="contrer_voler_capitaine">J'ai un Capitaine</button>
-                <button @click="contrer_voler_ambassadeur">J'ai un Ambassadeur</button>
+                <button @click="contrer_voler_capitaine">Je contre avec mon Capitaine</button>
+                <button @click="contrer_voler_ambassadeur">Je contre avec mon Ambassadeur</button>
             </div>
 
             <div v-if="echanger_flag">
                 <button @click="autoriser">J'autorise</button>
                 <button @click="contrer">Je mets en doute l'Ambassadeur</button>
+            </div>
+
+            <div v-if="assassine_flag">
+                <button @click="autoriser">J'autorise</button>
+                <button @click="contrer">Je mets en doute l'Assassin</button>
+            </div>
+            <div v-if="assassine_flag_targeted_player">
+                <button @click="autoriser">J'autorise</button>
+                <button @click="contrer_assassine">Je contre avec ma Comtesse</button>
             </div>
 
             <p v-if="countdown_flag"> {{ countdown }} </p>
@@ -183,7 +190,9 @@ Vue.component('game', {
             echanger_flag: false,
             echanger_cards_flag: false,
             echanger_cards: [],
-            count_picked_cards: 0
+            count_picked_cards: 0,
+            assassine_flag: false,
+            assassine_flag_targeted_player: false
         }
     },
 
@@ -194,6 +203,9 @@ Vue.component('game', {
             }
             else if (this.target_type === 'voler') {
                 socket.emit('voler_player', id);
+            }
+            else if (this.target_type === 'assassine') {
+                socket.emit('assassine_player', id);
             }
         },
         revenu() {
@@ -253,6 +265,12 @@ Vue.component('game', {
                 || (this.count_picked_cards === 2 && this.echanger_cards.length === 4)) {
                 socket.emit('confirmer_cards');
             }
+        },
+        assassine() {
+            socket.emit('assassine');
+        },
+        contrer_assassine() {
+            socket.emit('contrer_assassine');
         }
     },
 
@@ -331,6 +349,14 @@ Vue.component('game', {
 
         socket.on('count_picked_cards', (number) => {
             this.count_picked_cards = number;
+        });
+
+        socket.on('assassine_flag', (bool) => {
+            this.assassine_flag = bool;
+        });
+
+        socket.on('assassine_flag_targeted_player', (bool) => {
+            this.assassine_flag_targeted_player = bool;
         });
     }
 })

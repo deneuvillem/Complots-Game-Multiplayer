@@ -45,10 +45,13 @@ var targeted_player;
 var contrer_voler_capitaine = false;
 var contrer_voler_ambassadeur = false;
 
-//ECHANGEr CARTES
+//ECHANGER CARTES
 var echange_cards = [];
 var picked_cards = [];
 var picked_cards_flag = false;
+
+//ASSASSINAT (3 pièces)
+var contrer_assassine = false;
 
 //////////////////////////////////////////
 
@@ -127,6 +130,8 @@ io.sockets.on('connection', function (socket) {
             socket.emit('voler_flag', false);
             socket.emit('voler_flag_targeted_player', false);
             socket.emit('echanger_flag', false);
+            socket.emit('assassine_flag', false);
+            socket.emit('assassine_flag_targeted_player', false);
         }
     });
 
@@ -1988,7 +1993,7 @@ io.sockets.on('connection', function (socket) {
                                 }, 1000);
                             }
 
-                            //Temp écoulé: le joueur qui contre perd sa première ou sa deuxième carte
+                            //Temps écoulé: le joueur qui contre perd sa première ou sa deuxième carte
                             else if (--countdown < 0) {
                                 clearInterval(myTimer2);
                                 io.sockets.emit('countdown_flag', false);
@@ -2221,6 +2226,763 @@ io.sockets.on('connection', function (socket) {
         }
     });
 
+
+    ////////ASSASSINE (3 pièces)////////////
+    socket.on('contrer_assassine', function () {
+        if (socket.id === targeted_player.id && !contrer_assassine) {
+            contrer_assassine = true;
+        }
+    });
+
+    socket.on('assassine', function () {
+        if (socket.id === current_player.id && !already_played) {
+            if (current_player.pieces >= 3) {
+                already_played = true;
+                current_player.pieces -= 3;
+                socket.emit('my_turn_flag', false);
+                socket.emit('target_type', 'assassine');
+                socket.emit('target_player_flag', true);
+                io.sockets.emit('action_messages', current_player.username + " veut assassiner un joueur ! (Assassinat 3 pièces)");
+                io.sockets.emit('refresh_players_game', players);
+            }
+            else {
+                console.log('Pas assez de pièces pour Assassinat (3 pièces)');
+            }
+        }
+    });
+
+    socket.on('assassine_player', function (target_player_id) {
+        if (socket.id === current_player.id && target_player_id !== socket.id && !targeted_player && players.find(player => player.id === target_player_id).alive) {
+            socket.emit('target_player_flag', false);
+            targeted_player = players.find(player => player.id === target_player_id);
+            io.sockets.emit('action_messages', current_player.username + " prétend avoir un Assassin et veut assassiner "
+                + targeted_player.username);
+            socket.broadcast.to('in_game').emit('assassine_flag', true);
+
+            io.sockets.emit('countdown_flag', true);
+            let countdown = 10;
+            let myTimer = setInterval(() => {
+                io.sockets.emit('countdown', countdown);
+                console.log(countdown);
+
+                //////////////////////////////////////////////////////////////////////
+                ////////////Si tous les joueurs autorisent le tour ou temps écoulé///////////////////
+                if (all_players_autorised() || --countdown < 0) {
+                    clearInterval(myTimer);
+                    io.sockets.emit('countdown_flag', false);
+                    socket.broadcast.to('in_game').emit('assassine_flag', false);
+                    already_played = false;
+
+                    //Au tour du joueur ciblé de contrer avec sa Comtesse si il le souhaite
+                    console.log("Le tour continue !");
+                    io.to(targeted_player.id).emit('assassine_flag_targeted_player', true);
+                    targeted_player.autorise = false;
+
+                    io.sockets.emit('countdown_flag', true);
+                    let countdown = 10;
+                    let myTimer2 = setInterval(() => {
+                        io.sockets.emit('countdown', countdown);
+                        console.log(countdown);
+
+                        //Si le joueur ciblé effectue une action de contre
+                        if (contrer_assassine) {
+                            clearInterval(myTimer2);
+                            io.sockets.emit('countdown_flag', false);
+                            io.to(targeted_player.id).emit('assassine_flag_targeted_player', false);
+
+                            io.sockets.emit('action_messages', targeted_player.username + " prétend avoir une Comtessse pour "
+                                + "contrer " + current_player.username);
+
+                            //Demander au joueur courant si le joueur ciblé ment ou pas
+                            io.sockets.emit('countdown_flag', true);
+                            socket.emit('choice_flag', true);
+                            countdown = 10;
+                            let myTimer3 = setInterval(() => {
+                                io.sockets.emit('countdown', countdown);
+                                console.log(countdown);
+
+                                //Le joueur courant croit que le joueur ciblé dit la vérité
+                                if (truth_lie === true) {
+                                    clearInterval(myTimer3);
+                                    io.sockets.emit('countdown_flag', false);
+                                    socket.emit('choice_flag', false);
+                                    io.sockets.emit('action_messages', current_player.username + " croit que "
+                                        + targeted_player.username + " ne ment pas !");
+                                    next_turn_player();
+                                }
+
+                                //Le joueur courant croit que le joueur ciblé ment (ne possède pas de Comtesse)
+                                else if (truth_lie === false) {
+                                    clearInterval(myTimer3);
+                                    io.sockets.emit('countdown_flag', false);
+                                    socket.emit('choice_flag', false);
+
+                                    //Le joueur qui contre possède la carte Comtesse
+                                    if (player_owns_card(targeted_player, 'Comtesse')) {
+                                        io.sockets.emit('action_messages', targeted_player.username + " possédait bien une Comtesse donc "
+                                            + current_player.username + " va perdre une carte !");
+                                        socket.emit('choice_cards_flag', true);
+
+                                        //Timer de perte de carte du joueur courant
+                                        io.sockets.emit('countdown_flag', true);
+                                        countdown = 10;
+                                        lost_card = false;
+                                        let myTimer4 = setInterval(() => {
+                                            io.sockets.emit('countdown', countdown);
+                                            console.log(countdown);
+
+                                            //Le joueur courant choisit sa carte à perdre
+                                            if (lost_card) {
+                                                clearInterval(myTimer4);
+                                                io.sockets.emit('countdown_flag', false);
+                                                next_turn_player();
+                                            }
+
+                                            //Temps écoulé: le joueur courant perd sa première ou sa deuxième carte
+                                            else if (--countdown < 0) {
+                                                clearInterval(myTimer4);
+                                                io.sockets.emit('countdown_flag', false);
+                                                let player = players.find(player => player.id === socket.id);
+                                                let player_cards = players_cards.find(player => player.id === socket.id);
+                                                let card;
+                                                if (player_cards.cards[0].active) {
+                                                    card = player_cards.cards[0].name;
+                                                    player.cards[0] = card;
+                                                    player_cards.cards[0].active = false;
+                                                }
+                                                else if (player_cards.cards[1].active) {
+                                                    card = player_cards.cards[1].name;
+                                                    player.cards[1] = card;
+                                                    player_cards.cards[1].active = false;
+                                                }
+
+                                                //Le joueur courant n'a plus de cartes en jeu
+                                                if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
+                                                    player.alive = false;
+                                                    socket.leave('in_game');
+                                                }
+                                                io.sockets.emit('refresh_players_game', players);
+                                                socket.emit('choice_cards_flag', false);
+                                                io.sockets.emit('action_messages', player.username + " perd son/sa " + card);
+                                                socket.emit('cards', player_cards.cards);
+                                                next_turn_player();
+                                            }
+                                        }, 1000);
+                                    }
+
+                                    //Le joueur ciblé ne possède pas la carte Comtesse, il perd la partie
+                                    else {
+                                        //PERD LA PARTIE
+                                        io.sockets.emit('action_messages', targeted_player.username + " a menti et perd la partie !");
+                                        let player = players.find(player => player.id === targeted_player.id);
+                                        let player_cards = players_cards.find(player => player.id === targeted_player.id);
+
+                                        player.cards[0] = player_cards.cards[0].name;
+                                        player.cards[1] = player_cards.cards[1].name;
+                                        player_cards.cards[0].active = false;
+                                        player_cards.cards[1].active = false;
+                                        player.alive = false;
+                                        let socket_targeted_player = io.sockets.connected[targeted_player.id];
+                                        socket_targeted_player.leave('in_game');
+                                        
+                                        io.sockets.emit('refresh_players_game', players);
+                                        io.to(targeted_player.id).emit('cards', player_cards.cards);
+                                        next_turn_player();
+                                    }
+                                }
+                                //Temps écoulé: le joueur courant n'a pas choisi si le joueur ciblé mentait ou pas
+                                else if (--countdown < 0) {
+                                    clearInterval(myTimer3);
+                                    io.sockets.emit('countdown_flag', false);
+                                    socket.emit('choice_flag', false);
+                                    io.sockets.emit('action_messages', current_player.username + " croit que "
+                                        + targeted_player.username + " ne ment pas !");
+                                    next_turn_player();
+                                }
+                            }, 1000);
+                        }
+
+                        //A la fin du compteur, le joueur ciblé autorise l'Assassinat ou le joueur ciblé autorise l'assassinat par lui-même
+                        else if (--countdown < 0 || targeted_player.autorise) {
+                            clearInterval(myTimer2);
+                            io.sockets.emit('countdown_flag', false);
+                            io.to(targeted_player.id).emit('assassine_flag_targeted_player', false);
+
+                            //ASSASSINAT
+                            io.sockets.emit('action_messages', current_player.username + " assassine " + targeted_player.username);
+                            io.sockets.to(target_player_id).emit('choice_cards_flag', true);
+                            io.sockets.emit('countdown_flag', true);
+                            let countdown = 10;
+                            lost_card = false;
+                            let myTimer3 = setInterval(() => {
+                                io.sockets.emit('countdown', countdown);
+                                console.log(countdown);
+
+                                //Le joueur ciblé choisit sa carte à perdre
+                                if (lost_card) {
+                                    clearInterval(myTimer3);
+                                    io.sockets.emit('countdown_flag', false);
+                                    next_turn_player();
+                                }
+
+                                //Temps écoulé: le joueur ciblé perd sa première ou sa deuxième carte
+                                else if (--countdown < 0) {
+                                    clearInterval(myTimer3);
+                                    io.sockets.emit('countdown_flag', false);
+                                    let player = players.find(player => player.id === target_player_id);
+                                    let player_cards = players_cards.find(player => player.id === target_player_id);
+                                    let card;
+                                    if (player_cards.cards[0].active) {
+                                        card = player_cards.cards[0].name;
+                                        player.cards[0] = card;
+                                        player_cards.cards[0].active = false;
+                                    }
+                                    else if (player_cards.cards[1].active) {
+                                        card = player_cards.cards[1].name;
+                                        player.cards[1] = card;
+                                        player_cards.cards[1].active = false;
+                                    }
+
+                                    //Le joueur ciblé n'a plus de cartes en jeu
+                                    if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
+                                        player.alive = false;
+                                        let socket_target_player = io.sockets.connected[target_player_id];
+                                        socket_target_player.leave('in_game');
+                                    }
+                                    io.sockets.emit('refresh_players_game', players);
+                                    io.sockets.to(target_player_id).emit('choice_cards_flag', false);
+                                    io.sockets.emit('action_messages', player.username + " perd son/sa " + card);
+                                    io.sockets.to(target_player_id).emit('cards', player_cards.cards);
+                                    next_turn_player();
+                                }
+                            }, 1000);
+                        }
+                    }, 1000);
+                }
+
+                //////////////////////////////////////////////////////////////////////
+                ///////////Un joueur met en doute l'Assassin du joueur courant/////
+                else if (counter_player && counter_player.id !== current_player.id) {
+                    clearInterval(myTimer);
+                    io.sockets.emit('countdown_flag', false);
+                    io.sockets.emit('action_messages', counter_player.username + " met en doute " + current_player.username
+                        + " et le défie de montrer son Assassin !");
+                    socket.broadcast.to('in_game').emit('assassine_flag', false);
+
+                    //Le joueur courant possède la carte Assassin
+                    if (player_owns_card(current_player, 'Assassin')) {
+
+                        //Si le joueur qui contre est le joueur ciblé par l'Assassinat, il perd la partie
+                        if (counter_player.id === targeted_player.id) {
+                            //PERD LA PARTIE
+                            io.sockets.emit('action_messages', current_player.username + " possédait bien un Assassin donc "
+                            + counter_player.username + " perd la partie !");
+                            let player = players.find(player => player.id === targeted_player.id);
+                            let player_cards = players_cards.find(player => player.id === targeted_player.id);
+
+                            player.cards[0] = player_cards.cards[0].name;
+                            player.cards[1] = player_cards.cards[1].name;
+                            player_cards.cards[0].active = false;
+                            player_cards.cards[1].active = false;
+                            player.alive = false;
+                            let socket_targeted_player = io.sockets.connected[targeted_player.id];
+                            socket_targeted_player.leave('in_game');
+                            
+                            io.sockets.emit('refresh_players_game', players);
+                            io.to(targeted_player.id).emit('cards', player_cards.cards);
+                            next_turn_player();
+                        }
+                        
+                        //Le joueur qui contre n'est pas celui ciblé par l'assassinat
+                        else {
+                            io.sockets.emit('action_messages', current_player.username + " possédait bien un Assassin donc "
+                            + counter_player.username + " va perdre une carte !");
+                            io.to(counter_player.id).emit('choice_cards_flag', true);
+
+                            //Timer de perte de carte du joueur qui contre
+                            io.sockets.emit('countdown_flag', true);
+                            countdown = 10;
+                            lost_card = false;
+
+                            let myTimer2 = setInterval(() => {
+                                io.sockets.emit('countdown', countdown);
+                                console.log(countdown);
+
+                                //Le joueur qui contre choisit sa carte à perdre
+                                if (lost_card) {
+                                    clearInterval(myTimer2);
+                                    io.sockets.emit('countdown_flag', false);
+
+                                    //Au tour du joueur ciblé de contrer avec sa Comtesse si il le souhaite
+                                    console.log("Le tour continue !");
+                                    io.to(targeted_player.id).emit('assassine_flag_targeted_player', true);
+                                    targeted_player.autorise = false;
+
+                                    io.sockets.emit('countdown_flag', true);
+                                    let countdown = 10;
+                                    let myTimer3 = setInterval(() => {
+                                        io.sockets.emit('countdown', countdown);
+                                        console.log(countdown);
+
+                                        //Si le joueur ciblé effectue une action de contre
+                                        if (contrer_assassine) {
+                                            clearInterval(myTimer3);
+                                            io.sockets.emit('countdown_flag', false);
+                                            io.to(targeted_player.id).emit('assassine_flag_targeted_player', false);
+
+                                            io.sockets.emit('action_messages', targeted_player.username + " prétend avoir une Comtessse pour "
+                                                + "contrer " + current_player.username);
+
+                                            //Demander au joueur courant si le joueur ciblé ment ou pas
+                                            io.sockets.emit('countdown_flag', true);
+                                            socket.emit('choice_flag', true);
+                                            countdown = 10;
+                                            let myTimer4 = setInterval(() => {
+                                                io.sockets.emit('countdown', countdown);
+                                                console.log(countdown);
+
+                                                //Le joueur courant croit que le joueur ciblé dit la vérité
+                                                if (truth_lie === true) {
+                                                    clearInterval(myTimer4);
+                                                    io.sockets.emit('countdown_flag', false);
+                                                    socket.emit('choice_flag', false);
+                                                    io.sockets.emit('action_messages', current_player.username + " croit que "
+                                                        + targeted_player.username + " ne ment pas !");
+                                                    next_turn_player();
+                                                }
+
+                                                //Le joueur courant croit que le joueur ciblé ment (ne possède pas de Comtesse)
+                                                else if (truth_lie === false) {
+                                                    clearInterval(myTimer4);
+                                                    io.sockets.emit('countdown_flag', false);
+                                                    socket.emit('choice_flag', false);
+
+                                                    //Le joueur qui contre possède la carte Comtesse
+                                                    if (player_owns_card(targeted_player, 'Comtesse')) {
+                                                        io.sockets.emit('action_messages', targeted_player.username + " possédait bien une Comtesse donc "
+                                                            + current_player.username + " va perdre une carte !");
+                                                        socket.emit('choice_cards_flag', true);
+
+                                                        //Timer de perte de carte du joueur courant
+                                                        io.sockets.emit('countdown_flag', true);
+                                                        countdown = 10;
+                                                        lost_card = false;
+                                                        let myTimer5 = setInterval(() => {
+                                                            io.sockets.emit('countdown', countdown);
+                                                            console.log(countdown);
+
+                                                            //Le joueur courant choisit sa carte à perdre
+                                                            if (lost_card) {
+                                                                clearInterval(myTimer5);
+                                                                io.sockets.emit('countdown_flag', false);
+                                                                next_turn_player();
+                                                            }
+
+                                                            //Temps écoulé: le joueur courant perd sa première ou sa deuxième carte
+                                                            else if (--countdown < 0) {
+                                                                clearInterval(myTimer5);
+                                                                io.sockets.emit('countdown_flag', false);
+                                                                let player = players.find(player => player.id === socket.id);
+                                                                let player_cards = players_cards.find(player => player.id === socket.id);
+                                                                let card;
+                                                                if (player_cards.cards[0].active) {
+                                                                    card = player_cards.cards[0].name;
+                                                                    player.cards[0] = card;
+                                                                    player_cards.cards[0].active = false;
+                                                                }
+                                                                else if (player_cards.cards[1].active) {
+                                                                    card = player_cards.cards[1].name;
+                                                                    player.cards[1] = card;
+                                                                    player_cards.cards[1].active = false;
+                                                                }
+
+                                                                //Le joueur courant n'a plus de cartes en jeu
+                                                                if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
+                                                                    player.alive = false;
+                                                                    socket.leave('in_game');
+                                                                }
+                                                                io.sockets.emit('refresh_players_game', players);
+                                                                socket.emit('choice_cards_flag', false);
+                                                                io.sockets.emit('action_messages', player.username + " perd son/sa " + card);
+                                                                socket.emit('cards', player_cards.cards);
+                                                                next_turn_player();
+                                                            }
+                                                        }, 1000);
+                                                    }
+
+                                                    //Le joueur ciblé ne possède pas la carte Comtesse, il perd la partie
+                                                    else {
+                                                        //PERD LA PARTIE
+                                                        io.sockets.emit('action_messages', targeted_player.username + " a menti et perd la partie !");
+                                                        let player = players.find(player => player.id === targeted_player.id);
+                                                        let player_cards = players_cards.find(player => player.id === targeted_player.id);
+
+                                                        player.cards[0] = player_cards.cards[0].name;
+                                                        player.cards[1] = player_cards.cards[1].name;
+                                                        player_cards.cards[0].active = false;
+                                                        player_cards.cards[1].active = false;
+                                                        player.alive = false;
+                                                        let socket_targeted_player = io.sockets.connected[targeted_player.id];
+                                                        socket_targeted_player.leave('in_game');
+                                                        
+                                                        io.sockets.emit('refresh_players_game', players);
+                                                        io.to(targeted_player.id).emit('cards', player_cards.cards);
+                                                        next_turn_player();
+                                                    }
+                                                }
+                                                //Temps écoulé: le joueur courant n'a pas choisi si le joueur ciblé mentait ou pas
+                                                else if (--countdown < 0) {
+                                                    clearInterval(myTimer4);
+                                                    io.sockets.emit('countdown_flag', false);
+                                                    socket.emit('choice_flag', false);
+                                                    io.sockets.emit('action_messages', current_player.username + " croit que "
+                                                        + targeted_player.username + " ne ment pas !");
+                                                    next_turn_player();
+                                                }
+                                            }, 1000);
+                                        }
+
+                                        //A la fin du compteur, le joueur ciblé autorise l'Assassinat ou le joueur ciblé autorise l'assassinat par lui-même
+                                        else if (--countdown < 0 || targeted_player.autorise) {
+                                            clearInterval(myTimer3);
+                                            lost_card = false;
+                                            io.sockets.emit('countdown_flag', false);
+                                            io.to(targeted_player.id).emit('assassine_flag_targeted_player', false);
+
+                                            //ASSASSINAT
+                                            io.sockets.emit('action_messages', current_player.username + " assassine " + targeted_player.username);
+                                            io.sockets.to(target_player_id).emit('choice_cards_flag', true);
+                                            io.sockets.emit('countdown_flag', true);
+                                            countdown = 10;
+                                            let myTimer8 = setInterval(() => {
+                                                io.sockets.emit('countdown', countdown);
+                                                console.log(countdown);
+
+                                                //Le joueur ciblé choisit sa carte à perdre
+                                                if (lost_card) {
+                                                    clearInterval(myTimer8);
+                                                    io.sockets.emit('countdown_flag', false);
+                                                    next_turn_player();
+                                                }
+
+                                                //Temps écoulé: le joueur ciblé perd sa première ou sa deuxième carte
+                                                else if (--countdown < 0) {
+                                                    clearInterval(myTimer8);
+                                                    io.sockets.emit('countdown_flag', false);
+                                                    let player = players.find(player => player.id === target_player_id);
+                                                    let player_cards = players_cards.find(player => player.id === target_player_id);
+                                                    let card;
+                                                    if (player_cards.cards[0].active) {
+                                                        card = player_cards.cards[0].name;
+                                                        player.cards[0] = card;
+                                                        player_cards.cards[0].active = false;
+                                                    }
+                                                    else if (player_cards.cards[1].active) {
+                                                        card = player_cards.cards[1].name;
+                                                        player.cards[1] = card;
+                                                        player_cards.cards[1].active = false;
+                                                    }
+
+                                                    //Le joueur ciblé n'a plus de cartes en jeu
+                                                    if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
+                                                        player.alive = false;
+                                                        let socket_target_player = io.sockets.connected[target_player_id];
+                                                        socket_target_player.leave('in_game');
+                                                    }
+                                                    io.sockets.emit('refresh_players_game', players);
+                                                    io.sockets.to(target_player_id).emit('choice_cards_flag', false);
+                                                    io.sockets.emit('action_messages', player.username + " perd son/sa " + card);
+                                                    io.sockets.to(target_player_id).emit('cards', player_cards.cards);
+                                                    next_turn_player();
+                                                }
+                                            }, 1000);
+                                        }
+                                    }, 1000);
+                                }
+
+                                //Temps écoulé: le joueur qui contre perd sa première ou sa deuxième carte
+                                else if (--countdown < 0) {
+                                    clearInterval(myTimer2);
+                                    io.sockets.emit('countdown_flag', false);
+                                    let player = players.find(player => player.id === counter_player.id);
+                                    let player_cards = players_cards.find(player => player.id === counter_player.id);
+                                    let card;
+                                    if (player_cards.cards[0].active) {
+                                        card = player_cards.cards[0].name;
+                                        player.cards[0] = card;
+                                        player_cards.cards[0].active = false;
+                                    }
+                                    else if (player_cards.cards[1].active) {
+                                        card = player_cards.cards[1].name;
+                                        player.cards[1] = card;
+                                        player_cards.cards[1].active = false;
+                                    }
+
+                                    //Le joueur n'a plus de cartes en jeu
+                                    if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
+                                        player.alive = false;
+                                        let socket_counter_player = io.sockets.connected[counter_player.id];
+                                        socket_counter_player.leave('in_game');
+                                    }
+                                    io.sockets.emit('refresh_players_game', players);
+                                    io.to(counter_player.id).emit('choice_cards_flag', false);
+                                    io.sockets.emit('action_messages', player.username + " perd son/sa " + card);
+                                    io.to(counter_player.id).emit('cards', player_cards.cards);
+
+                                    if (counter_player.id === targeted_player.id) {
+                                        next_turn_player();
+                                    }
+                                    else {
+                                        //Au tour du joueur ciblé de contrer avec sa Comtesse si il le souhaite
+                                        console.log("Le tour continue !");
+                                        io.to(targeted_player.id).emit('assassine_flag_targeted_player', true);
+                                        targeted_player.autorise = false;
+
+                                        io.sockets.emit('countdown_flag', true);
+                                        let countdown = 10;
+                                        let myTimer2 = setInterval(() => {
+                                            io.sockets.emit('countdown', countdown);
+                                            console.log(countdown);
+
+                                            //Si le joueur ciblé effectue une action de contre
+                                            if (contrer_assassine) {
+                                                clearInterval(myTimer2);
+                                                io.sockets.emit('countdown_flag', false);
+                                                io.to(targeted_player.id).emit('assassine_flag_targeted_player', false);
+
+                                                io.sockets.emit('action_messages', targeted_player.username + " prétend avoir une Comtessse pour "
+                                                    + "contrer " + current_player.username);
+
+                                                //Demander au joueur courant si le joueur ciblé ment ou pas
+                                                io.sockets.emit('countdown_flag', true);
+                                                socket.emit('choice_flag', true);
+                                                countdown = 10;
+                                                let myTimer3 = setInterval(() => {
+                                                    io.sockets.emit('countdown', countdown);
+                                                    console.log(countdown);
+
+                                                    //Le joueur courant croit que le joueur ciblé dit la vérité
+                                                    if (truth_lie === true) {
+                                                        clearInterval(myTimer3);
+                                                        io.sockets.emit('countdown_flag', false);
+                                                        socket.emit('choice_flag', false);
+                                                        io.sockets.emit('action_messages', current_player.username + " croit que "
+                                                            + targeted_player.username + " ne ment pas !");
+                                                        next_turn_player();
+                                                    }
+
+                                                    //Le joueur courant croit que le joueur ciblé ment (ne possède pas de Comtesse)
+                                                    else if (truth_lie === false) {
+                                                        clearInterval(myTimer3);
+                                                        io.sockets.emit('countdown_flag', false);
+                                                        socket.emit('choice_flag', false);
+
+                                                        //Le joueur qui contre possède la carte Comtesse
+                                                        if (player_owns_card(targeted_player, 'Comtesse')) {
+                                                            io.sockets.emit('action_messages', targeted_player.username + " possédait bien une Comtesse donc "
+                                                                + current_player.username + " va perdre une carte !");
+                                                            socket.emit('choice_cards_flag', true);
+
+                                                            //Timer de perte de carte du joueur courant
+                                                            io.sockets.emit('countdown_flag', true);
+                                                            countdown = 10;
+                                                            lost_card = false;
+                                                            let myTimer4 = setInterval(() => {
+                                                                io.sockets.emit('countdown', countdown);
+                                                                console.log(countdown);
+
+                                                                //Le joueur courant choisit sa carte à perdre
+                                                                if (lost_card) {
+                                                                    clearInterval(myTimer4);
+                                                                    io.sockets.emit('countdown_flag', false);
+                                                                    next_turn_player();
+                                                                }
+
+                                                                //Temps écoulé: le joueur courant perd sa première ou sa deuxième carte
+                                                                else if (--countdown < 0) {
+                                                                    clearInterval(myTimer4);
+                                                                    io.sockets.emit('countdown_flag', false);
+                                                                    let player = players.find(player => player.id === socket.id);
+                                                                    let player_cards = players_cards.find(player => player.id === socket.id);
+                                                                    let card;
+                                                                    if (player_cards.cards[0].active) {
+                                                                        card = player_cards.cards[0].name;
+                                                                        player.cards[0] = card;
+                                                                        player_cards.cards[0].active = false;
+                                                                    }
+                                                                    else if (player_cards.cards[1].active) {
+                                                                        card = player_cards.cards[1].name;
+                                                                        player.cards[1] = card;
+                                                                        player_cards.cards[1].active = false;
+                                                                    }
+
+                                                                    //Le joueur courant n'a plus de cartes en jeu
+                                                                    if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
+                                                                        player.alive = false;
+                                                                        socket.leave('in_game');
+                                                                    }
+                                                                    io.sockets.emit('refresh_players_game', players);
+                                                                    socket.emit('choice_cards_flag', false);
+                                                                    io.sockets.emit('action_messages', player.username + " perd son/sa " + card);
+                                                                    socket.emit('cards', player_cards.cards);
+                                                                    next_turn_player();
+                                                                }
+                                                            }, 1000);
+                                                        }
+
+                                                        //Le joueur ciblé ne possède pas la carte Comtesse, il perd la partie
+                                                        else {
+                                                            //PERD LA PARTIE
+                                                            io.sockets.emit('action_messages', targeted_player.username + " a menti et perd la partie !");
+                                                            let player = players.find(player => player.id === targeted_player.id);
+                                                            let player_cards = players_cards.find(player => player.id === targeted_player.id);
+
+                                                            player.cards[0] = player_cards.cards[0].name;
+                                                            player.cards[1] = player_cards.cards[1].name;
+                                                            player_cards.cards[0].active = false;
+                                                            player_cards.cards[1].active = false;
+                                                            player.alive = false;
+                                                            let socket_targeted_player = io.sockets.connected[targeted_player.id];
+                                                            socket_targeted_player.leave('in_game');
+                                                            
+                                                            io.sockets.emit('refresh_players_game', players);
+                                                            io.to(targeted_player.id).emit('cards', player_cards.cards);
+                                                            next_turn_player();
+                                                        }
+                                                    }
+                                                    //Temps écoulé: le joueur courant n'a pas choisi si le joueur ciblé mentait ou pas
+                                                    else if (--countdown < 0) {
+                                                        clearInterval(myTimer3);
+                                                        io.sockets.emit('countdown_flag', false);
+                                                        socket.emit('choice_flag', false);
+                                                        io.sockets.emit('action_messages', current_player.username + " croit que "
+                                                            + targeted_player.username + " ne ment pas !");
+                                                        next_turn_player();
+                                                    }
+                                                }, 1000);
+                                            }
+
+                                            //A la fin du compteur, le joueur ciblé autorise l'Assassinat ou le joueur ciblé autorise l'assassinat par lui-même
+                                            else if (--countdown < 0 || targeted_player.autorise) {
+                                                clearInterval(myTimer2);
+                                                io.sockets.emit('countdown_flag', false);
+                                                io.to(targeted_player.id).emit('assassine_flag_targeted_player', false);
+
+                                                //ASSASSINAT
+                                                io.sockets.emit('action_messages', current_player.username + " assassine " + targeted_player.username);
+                                                io.sockets.to(target_player_id).emit('choice_cards_flag', true);
+                                                io.sockets.emit('countdown_flag', true);
+                                                let countdown = 10;
+                                                lost_card = false;
+
+                                                let myTimer3 = setInterval(() => {
+                                                    io.sockets.emit('countdown', countdown);
+                                                    console.log(countdown);
+
+                                                    //Le joueur ciblé choisit sa carte à perdre
+                                                    if (lost_card) {
+                                                        clearInterval(myTimer3);
+                                                        io.sockets.emit('countdown_flag', false);
+                                                        next_turn_player();
+                                                    }
+
+                                                    //Temps écoulé: le joueur ciblé perd sa première ou sa deuxième carte
+                                                    else if (--countdown < 0) {
+                                                        clearInterval(myTimer3);
+                                                        io.sockets.emit('countdown_flag', false);
+                                                        let player = players.find(player => player.id === target_player_id);
+                                                        let player_cards = players_cards.find(player => player.id === target_player_id);
+                                                        let card;
+                                                        if (player_cards.cards[0].active) {
+                                                            card = player_cards.cards[0].name;
+                                                            player.cards[0] = card;
+                                                            player_cards.cards[0].active = false;
+                                                        }
+                                                        else if (player_cards.cards[1].active) {
+                                                            card = player_cards.cards[1].name;
+                                                            player.cards[1] = card;
+                                                            player_cards.cards[1].active = false;
+                                                        }
+
+                                                        //Le joueur ciblé n'a plus de cartes en jeu
+                                                        if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
+                                                            player.alive = false;
+                                                            let socket_target_player = io.sockets.connected[target_player_id];
+                                                            socket_target_player.leave('in_game');
+                                                        }
+                                                        io.sockets.emit('refresh_players_game', players);
+                                                        io.sockets.to(target_player_id).emit('choice_cards_flag', false);
+                                                        io.sockets.emit('action_messages', player.username + " perd son/sa " + card);
+                                                        io.sockets.to(target_player_id).emit('cards', player_cards.cards);
+                                                        next_turn_player();
+                                                    }
+                                                }, 1000);
+                                            }
+                                        }, 1000);
+                                    }
+                                }
+                            }, 1000);
+                        }
+                        
+                    }
+                    //Le joueur courant n'a pas la carte Assassin
+                    else {
+                        io.sockets.emit('action_messages', current_player.username + " a menti et va perdre une carte !");
+                        socket.emit('choice_cards_flag', true);
+
+                        //Timer de perte de carte du joueur courant
+                        io.sockets.emit('countdown_flag', true);
+                        countdown = 10;
+                        lost_card = false;
+
+                        let myTimer2 = setInterval(() => {
+                            io.sockets.emit('countdown', countdown);
+                            console.log(countdown);
+
+                            //Le joueur courant choisit sa carte à perdre
+                            if (lost_card) {
+                                clearInterval(myTimer2);
+                                io.sockets.emit('countdown_flag', false);
+                                next_turn_player();
+                            }
+
+                            //Temps écoulé: le joueur courant perd sa première ou sa deuxième carte
+                            else if (--countdown < 0) {
+                                clearInterval(myTimer2);
+                                io.sockets.emit('countdown_flag', false);
+                                let player = players.find(player => player.id === current_player.id);
+                                let player_cards = players_cards.find(player => player.id === current_player.id);
+                                let card;
+                                if (player_cards.cards[0].active) {
+                                    card = player_cards.cards[0].name;
+                                    player.cards[0] = card;
+                                    player_cards.cards[0].active = false;
+                                }
+                                else if (player_cards.cards[1].active) {
+                                    card = player_cards.cards[1].name;
+                                    player.cards[1] = card;
+                                    player_cards.cards[1].active = false;
+                                }
+
+                                //Le joueur n'a plus de cartes en jeu
+                                if (!player_cards.cards[0].active && !player_cards.cards[1].active) {
+                                    player.alive = false;
+                                    let socket_current_player = io.sockets.connected[current_player.id];
+                                    socket_current_player.leave('in_game');
+                                }
+                                io.sockets.emit('refresh_players_game', players);
+                                io.sockets.to(current_player.id).emit('choice_cards_flag', false);
+                                io.sockets.emit('action_messages', player.username + " perd son/sa " + card);
+                                io.sockets.to(current_player.id).emit('cards', player_cards.cards);
+                                next_turn_player();
+                            }
+                        }, 1000);
+                    }
+                }                
+            }, 1000);
+        }
+    });
+
 });
 
 
@@ -2286,6 +3048,7 @@ function next_turn_player() {
         echange_cards = [];
         picked_cards = [];
         picked_cards_flag = false;
+        contrer_assassine = false;
         players.forEach((player) => {
             player.autorise = false;
         });
