@@ -2872,6 +2872,10 @@ function all_players_autorised() {
 app.use("/style", express.static('./style/'));  //Contient le style des pages (.css)
 app.use("/client", express.static('./client/')); //Contient le code Javascript du Client (.js)
 
-server.listen(8080, () => {
-    console.log('Listening on port: 8080');
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 8080;
+}
+server.listen(port, () => {
+    console.log('Listening on port: ' + port);
 });
