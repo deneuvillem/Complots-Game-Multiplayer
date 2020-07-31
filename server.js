@@ -109,6 +109,17 @@ io.sockets.on('connection', function (socket) {
             disconnected_player.alive = false;
             socket.leave('in_game'); //Joueur plus en jeu
             io.sockets.emit('refresh_players_game', players);
+
+            //Relance la partie si plus aucun joueur en vie
+            let flag = true;
+            players.forEach((player) => {
+                if (player.alive) {
+                    flag = false;
+                }
+            });
+            if (flag) {
+                restart_game();
+            }
         }
         //Si joueur déconnecté dans le lobby
         else if (disconnected_player != undefined) {
@@ -2867,6 +2878,37 @@ function all_players_autorised() {
         return false;
     }
     return true;
+}
+
+function restart_game() {
+    console.log("La partie redémarre !");
+    game_started = false;
+    cards = ['Duc', 'Duc', 'Duc', 'Ambassadeur', 'Ambassadeur', 'Ambassadeur', 'Capitaine',
+    'Capitaine', 'Capitaine', 'Assassin', 'Assassin', 'Assassin', 'Comtesse', 'Comtesse', 'Comtesse'];
+    deck = shuffle(cards);
+    players = []; //Info des joueurs côté client
+    players_cards = []; //Infos des joueurs côté serveur
+    count_ready_players = 0;
+    current_player = undefined; //Joueur qui joue le tour
+    index_players = 0; //Pour itérer sur la liste des joueurs
+    game_started = false;
+    counter_player = undefined;
+    already_played = false;
+    truth_lie = undefined;
+    lost_card = false;
+    targeted_player = undefined;
+
+    //VOL
+    contrer_voler_capitaine = false;
+    contrer_voler_ambassadeur = false;
+
+    //ECHANGER CARTES
+    echange_cards = [];
+    picked_cards = [];
+    picked_cards_flag = false;
+
+    //ASSASSINAT (3 pièces)
+    contrer_assassine = false;
 }
 
 app.use("/style", express.static('./style/'));  //Contient le style des pages (.css)
