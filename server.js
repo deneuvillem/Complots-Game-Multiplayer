@@ -204,10 +204,11 @@ io.sockets.on('connection', function (socket) {
         if (socket.id === current_player.id && !already_played && current_player.pieces <= 9) {
             already_played = true;
             socket.emit('my_turn_flag', false);
+            let countdown = 10;
+            io.sockets.emit('countdown', countdown);
             io.sockets.emit('countdown_flag', true);
             socket.broadcast.to('in_game').emit('aide_etrangere_flag', true);
             io.sockets.emit('action_messages', current_player.username + " veut utiliser l'aide étrangère !");
-            let countdown = 10;
 
             let myTimer = setInterval(() => {
                 io.sockets.emit('countdown', countdown);
@@ -235,9 +236,10 @@ io.sockets.on('connection', function (socket) {
                     socket.broadcast.to('in_game').emit('aide_etrangere_flag', false);
 
                     //Demander au joueur courant si le joueur qui contre ment ou pas
-                    io.sockets.emit('countdown_flag', true);
                     socket.emit('choice_flag', true);
                     countdown = 10;
+                    io.sockets.emit('countdown', countdown);
+                    io.sockets.emit('countdown_flag', true);
                     let myTimer2 = setInterval(() => {
                         io.sockets.emit('countdown', countdown);
                         console.log(countdown);
@@ -265,8 +267,9 @@ io.sockets.on('connection', function (socket) {
                                 socket.emit('choice_cards_flag', true);
 
                                 //Timer de perte de carte du joueur courant
-                                io.sockets.emit('countdown_flag', true);
                                 countdown = 10;
+                                io.sockets.emit('countdown', countdown);
+                                io.sockets.emit('countdown_flag', true);
                                 let myTimer3 = setInterval(() => {
                                     io.sockets.emit('countdown', countdown);
                                     console.log(countdown);
@@ -315,8 +318,9 @@ io.sockets.on('connection', function (socket) {
                                 io.sockets.emit('action_messages', counter_player.username + " a menti et va perdre une carte !");
                                 io.sockets.to(counter_player.id).emit('choice_cards_flag', true);
                                 //Timer de perte de carte
-                                io.sockets.emit('countdown_flag', true);
                                 countdown = 10;
+                                io.sockets.emit('countdown', countdown);
+                                io.sockets.emit('countdown_flag', true);
                                 let myTimer3 = setInterval(() => {
                                     io.sockets.emit('countdown', countdown);
                                     console.log(countdown);
@@ -430,8 +434,9 @@ io.sockets.on('connection', function (socket) {
             io.sockets.to(target_player_id).emit('choice_cards_flag', true);
 
             //Timer de perte de carte du joueur ciblé
-            io.sockets.emit('countdown_flag', true);
             let countdown = 10;
+            io.sockets.emit('countdown', countdown);
+            io.sockets.emit('countdown_flag', true);
             let myTimer = setInterval(() => {
                 io.sockets.emit('countdown', countdown);
                 console.log(countdown);
@@ -481,10 +486,11 @@ io.sockets.on('connection', function (socket) {
         if (socket.id === current_player.id && !already_played && current_player.pieces <= 9) {
             already_played = true;
             socket.emit('my_turn_flag', false);
-            io.sockets.emit('countdown_flag', true);
             socket.broadcast.to('in_game').emit('taxe_flag', true);
             io.sockets.emit('action_messages', current_player.username + " veut collecter les taxes !");
-            let countdown = 10;
+            countdown = 10;
+            io.sockets.emit('countdown', countdown);
+            io.sockets.emit('countdown_flag', true);
 
             let myTimer = setInterval(() => {
                 io.sockets.emit('countdown', countdown);
@@ -517,8 +523,9 @@ io.sockets.on('connection', function (socket) {
                         io.to(counter_player.id).emit('choice_cards_flag', true);
 
                         //Timer de perte de carte du joueur qui contre
-                        io.sockets.emit('countdown_flag', true);
                         countdown = 10;
+                        io.sockets.emit('countdown', countdown);
+                        io.sockets.emit('countdown_flag', true);
                         let myTimer2 = setInterval(() => {
                             io.sockets.emit('countdown', countdown);
                             console.log(countdown);
@@ -577,8 +584,9 @@ io.sockets.on('connection', function (socket) {
                         socket.emit('choice_cards_flag', true);
 
                         //Timer de perte de carte du joueur courant
-                        io.sockets.emit('countdown_flag', true);
                         countdown = 10;
+                        io.sockets.emit('countdown', countdown);
+                        io.sockets.emit('countdown_flag', true);
                         let myTimer2 = setInterval(() => {
                             io.sockets.emit('countdown', countdown);
                             console.log(countdown);
@@ -673,8 +681,9 @@ io.sockets.on('connection', function (socket) {
                 + targeted_player.username);
             socket.broadcast.to('in_game').emit('voler_flag', true);
 
-            io.sockets.emit('countdown_flag', true);
             let countdown = 10;
+            io.sockets.emit('countdown', countdown);
+            io.sockets.emit('countdown_flag', true);
             let myTimer = setInterval(() => {
                 io.sockets.emit('countdown', countdown);
                 console.log(countdown);
@@ -692,8 +701,9 @@ io.sockets.on('connection', function (socket) {
                     io.to(targeted_player.id).emit('voler_flag_targeted_player', true);
                     targeted_player.autorise = false;
 
+                    countdown = 10;
+                    io.sockets.emit('countdown', countdown);
                     io.sockets.emit('countdown_flag', true);
-                    let countdown = 10;
                     let myTimer2 = setInterval(() => {
                         io.sockets.emit('countdown', countdown);
                         console.log(countdown);
@@ -715,9 +725,10 @@ io.sockets.on('connection', function (socket) {
                                 + "contrer " + current_player.username);
 
                             //Demander au joueur courant si le joueur ciblé ment ou pas
-                            io.sockets.emit('countdown_flag', true);
                             socket.emit('choice_flag', true);
                             countdown = 10;
+                            io.sockets.emit('countdown', countdown);
+                            io.sockets.emit('countdown_flag', true);
                             let myTimer3 = setInterval(() => {
                                 io.sockets.emit('countdown', countdown);
                                 console.log(countdown);
@@ -745,8 +756,9 @@ io.sockets.on('connection', function (socket) {
                                         socket.emit('choice_cards_flag', true);
 
                                         //Timer de perte de carte du joueur courant
-                                        io.sockets.emit('countdown_flag', true);
                                         countdown = 10;
+                                        io.sockets.emit('countdown', countdown);
+                                        io.sockets.emit('countdown_flag', true);
                                         lost_card = false;
                                         let myTimer4 = setInterval(() => {
                                             io.sockets.emit('countdown', countdown);
@@ -796,8 +808,9 @@ io.sockets.on('connection', function (socket) {
                                         io.sockets.emit('action_messages', targeted_player.username + " a menti et va perdre une carte !");
                                         io.sockets.to(targeted_player.id).emit('choice_cards_flag', true);
                                         //Timer de perte de carte
-                                        io.sockets.emit('countdown_flag', true);
                                         countdown = 10;
+                                        io.sockets.emit('countdown', countdown);
+                                        io.sockets.emit('countdown_flag', true);
                                         lost_card = false;
 
                                         let myTimer5 = setInterval(() => {
@@ -930,8 +943,9 @@ io.sockets.on('connection', function (socket) {
                         io.to(counter_player.id).emit('choice_cards_flag', true);
 
                         //Timer de perte de carte du joueur qui contre
-                        io.sockets.emit('countdown_flag', true);
                         countdown = 10;
+                        io.sockets.emit('countdown', countdown);
+                        io.sockets.emit('countdown_flag', true);
                         lost_card = false;
 
                         let myTimer2 = setInterval(() => {
@@ -967,8 +981,9 @@ io.sockets.on('connection', function (socket) {
                                     io.to(targeted_player.id).emit('voler_flag_targeted_player', true);
                                     targeted_player.autorise = false;
 
+                                    countdown = 10;
+                                    io.sockets.emit('countdown', countdown);
                                     io.sockets.emit('countdown_flag', true);
-                                    let countdown = 10;
                                     let myTimer = setInterval(() => {
                                         io.sockets.emit('countdown', countdown);
                                         console.log(countdown);
@@ -990,9 +1005,10 @@ io.sockets.on('connection', function (socket) {
                                                 + "contrer " + current_player.username);
 
                                             //Demander au joueur courant si le joueur qui ciblé ment ou pas
-                                            io.sockets.emit('countdown_flag', true);
                                             socket.emit('choice_flag', true);
                                             countdown = 10;
+                                            io.sockets.emit('countdown', countdown);
+                                            io.sockets.emit('countdown_flag', true);
                                             let myTimer2 = setInterval(() => {
                                                 io.sockets.emit('countdown', countdown);
                                                 console.log(countdown);
@@ -1020,8 +1036,9 @@ io.sockets.on('connection', function (socket) {
                                                         socket.emit('choice_cards_flag', true);
 
                                                         //Timer de perte de carte du joueur courant
-                                                        io.sockets.emit('countdown_flag', true);
                                                         countdown = 10;
+                                                        io.sockets.emit('countdown', countdown);
+                                                        io.sockets.emit('countdown_flag', true);
                                                         lost_card = false;
 
                                                         let myTimer3 = setInterval(() => {
@@ -1072,8 +1089,9 @@ io.sockets.on('connection', function (socket) {
                                                         io.sockets.emit('action_messages', targeted_player.username + " a menti et va perdre une carte !");
                                                         io.sockets.to(targeted_player.id).emit('choice_cards_flag', true);
                                                         //Timer de perte de carte
-                                                        io.sockets.emit('countdown_flag', true);
                                                         countdown = 10;
+                                                        io.sockets.emit('countdown', countdown);
+                                                        io.sockets.emit('countdown_flag', true);
                                                         lost_card = false;
 
                                                         let myTimer2 = setInterval(() => {
@@ -1230,8 +1248,9 @@ io.sockets.on('connection', function (socket) {
                                     io.to(targeted_player.id).emit('voler_flag_targeted_player', true);
                                     targeted_player.autorise = false;
 
+                                    countdown = 10;
+                                    io.sockets.emit('countdown', countdown);
                                     io.sockets.emit('countdown_flag', true);
-                                    let countdown = 10;
                                     let myTimer = setInterval(() => {
                                         io.sockets.emit('countdown', countdown);
                                         console.log(countdown);
@@ -1253,9 +1272,10 @@ io.sockets.on('connection', function (socket) {
                                                 + "contrer " + current_player.username);
 
                                             //Demander au joueur courant si le joueur qui ciblé ment ou pas
-                                            io.sockets.emit('countdown_flag', true);
                                             socket.emit('choice_flag', true);
                                             countdown = 10;
+                                            io.sockets.emit('countdown', countdown);
+                                            io.sockets.emit('countdown_flag', true);
                                             let myTimer2 = setInterval(() => {
                                                 io.sockets.emit('countdown', countdown);
                                                 console.log(countdown);
@@ -1283,8 +1303,9 @@ io.sockets.on('connection', function (socket) {
                                                         socket.emit('choice_cards_flag', true);
 
                                                         //Timer de perte de carte du joueur courant
-                                                        io.sockets.emit('countdown_flag', true);
                                                         countdown = 10;
+                                                        io.sockets.emit('countdown', countdown);
+                                                        io.sockets.emit('countdown_flag', true);
                                                         lost_card = false;
 
                                                         let myTimer3 = setInterval(() => {
@@ -1335,8 +1356,9 @@ io.sockets.on('connection', function (socket) {
                                                         io.sockets.emit('action_messages', targeted_player.username + " a menti et va perdre une carte !");
                                                         io.sockets.to(targeted_player.id).emit('choice_cards_flag', true);
                                                         //Timer de perte de carte
-                                                        io.sockets.emit('countdown_flag', true);
                                                         countdown = 10;
+                                                        io.sockets.emit('countdown', countdown);
+                                                        io.sockets.emit('countdown_flag', true);
                                                         lost_card = false;
 
                                                         let myTimer2 = setInterval(() => {
@@ -1463,8 +1485,9 @@ io.sockets.on('connection', function (socket) {
                         socket.emit('choice_cards_flag', true);
 
                         //Timer de perte de carte du joueur courant
-                        io.sockets.emit('countdown_flag', true);
                         countdown = 10;
+                        io.sockets.emit('countdown', countdown);
+                        io.sockets.emit('countdown_flag', true);
                         lost_card = false;
 
                         let myTimer2 = setInterval(() => {
@@ -1587,10 +1610,11 @@ io.sockets.on('connection', function (socket) {
         if (socket.id === current_player.id && !already_played && echange_cards.length === 0 && current_player.pieces <= 9) {
             already_played = true;
             socket.emit('my_turn_flag', false);
-            io.sockets.emit('countdown_flag', true);
             socket.broadcast.to('in_game').emit('echanger_flag', true);
             io.sockets.emit('action_messages', current_player.username + " veut échanger ses cartes !");
             let countdown = 10;
+            io.sockets.emit('countdown', countdown);
+            io.sockets.emit('countdown_flag', true);
 
             let myTimer = setInterval(() => {
                 io.sockets.emit('countdown', countdown);
@@ -1639,6 +1663,7 @@ io.sockets.on('connection', function (socket) {
                     console.log(echange_cards);
                     
                     countdown = 10;
+                    io.sockets.emit('countdown', countdown);
                     io.sockets.emit('countdown_flag', true);
                     let myTimer2 = setInterval(() => {
                         io.sockets.emit('countdown', countdown);
@@ -1687,8 +1712,9 @@ io.sockets.on('connection', function (socket) {
                         io.to(counter_player.id).emit('choice_cards_flag', true);
 
                         //Timer de perte de carte du joueur qui contre
-                        io.sockets.emit('countdown_flag', true);
                         countdown = 10;
+                        io.sockets.emit('countdown', countdown);
+                        io.sockets.emit('countdown_flag', true);
                         let myTimer2 = setInterval(() => {
                             io.sockets.emit('countdown', countdown);
                             console.log(countdown);
@@ -1736,6 +1762,7 @@ io.sockets.on('connection', function (socket) {
                                 console.log(echange_cards);
                                 
                                 countdown = 10;
+                                io.sockets.emit('countdown', countdown);
                                 io.sockets.emit('countdown_flag', true);
                                 let myTimer3 = setInterval(() => {
                                     io.sockets.emit('countdown', countdown);
@@ -1835,6 +1862,7 @@ io.sockets.on('connection', function (socket) {
                                 console.log(echange_cards);
                                 
                                 countdown = 10;
+                                io.sockets.emit('countdown', countdown);
                                 io.sockets.emit('countdown_flag', true);
                                 let myTimer3 = setInterval(() => {
                                     io.sockets.emit('countdown', countdown);
@@ -1875,8 +1903,9 @@ io.sockets.on('connection', function (socket) {
                         socket.emit('choice_cards_flag', true);
 
                         //Timer de perte de carte du joueur courant
-                        io.sockets.emit('countdown_flag', true);
                         countdown = 10;
+                        io.sockets.emit('countdown', countdown);
+                        io.sockets.emit('countdown_flag', true);
                         let myTimer2 = setInterval(() => {
                             io.sockets.emit('countdown', countdown);
                             console.log(countdown);
@@ -1966,6 +1995,7 @@ io.sockets.on('connection', function (socket) {
                     console.log(echange_cards);
                     
                     countdown = 10;
+                    io.sockets.emit('countdown', countdown);
                     io.sockets.emit('countdown_flag', true);
                     let myTimer2 = setInterval(() => {
                         io.sockets.emit('countdown', countdown);
@@ -2034,8 +2064,9 @@ io.sockets.on('connection', function (socket) {
                 + targeted_player.username);
             socket.broadcast.to('in_game').emit('assassine_flag', true);
 
-            io.sockets.emit('countdown_flag', true);
             let countdown = 10;
+            io.sockets.emit('countdown', countdown);
+            io.sockets.emit('countdown_flag', true);
             let myTimer = setInterval(() => {
                 io.sockets.emit('countdown', countdown);
                 console.log(countdown);
@@ -2053,8 +2084,9 @@ io.sockets.on('connection', function (socket) {
                     io.to(targeted_player.id).emit('assassine_flag_targeted_player', true);
                     targeted_player.autorise = false;
 
+                    countdown = 10;
+                    io.sockets.emit('countdown', countdown);
                     io.sockets.emit('countdown_flag', true);
-                    let countdown = 10;
                     let myTimer2 = setInterval(() => {
                         io.sockets.emit('countdown', countdown);
                         console.log(countdown);
@@ -2069,9 +2101,10 @@ io.sockets.on('connection', function (socket) {
                                 + "contrer " + current_player.username);
 
                             //Demander au joueur courant si le joueur ciblé ment ou pas
-                            io.sockets.emit('countdown_flag', true);
                             socket.emit('choice_flag', true);
                             countdown = 10;
+                            io.sockets.emit('countdown', countdown);
+                            io.sockets.emit('countdown_flag', true);
                             let myTimer3 = setInterval(() => {
                                 io.sockets.emit('countdown', countdown);
                                 console.log(countdown);
@@ -2099,8 +2132,9 @@ io.sockets.on('connection', function (socket) {
                                         socket.emit('choice_cards_flag', true);
 
                                         //Timer de perte de carte du joueur courant
-                                        io.sockets.emit('countdown_flag', true);
                                         countdown = 10;
+                                        io.sockets.emit('countdown', countdown);
+                                        io.sockets.emit('countdown_flag', true);
                                         lost_card = false;
                                         let myTimer4 = setInterval(() => {
                                             io.sockets.emit('countdown', countdown);
@@ -2186,8 +2220,9 @@ io.sockets.on('connection', function (socket) {
                             //ASSASSINAT
                             io.sockets.emit('action_messages', current_player.username + " assassine " + targeted_player.username);
                             io.sockets.to(target_player_id).emit('choice_cards_flag', true);
+                            countdown = 10;
+                            io.sockets.emit('countdown', countdown);
                             io.sockets.emit('countdown_flag', true);
-                            let countdown = 10;
                             lost_card = false;
                             let myTimer3 = setInterval(() => {
                                 io.sockets.emit('countdown', countdown);
@@ -2275,8 +2310,9 @@ io.sockets.on('connection', function (socket) {
                             io.to(counter_player.id).emit('choice_cards_flag', true);
 
                             //Timer de perte de carte du joueur qui contre
-                            io.sockets.emit('countdown_flag', true);
                             countdown = 10;
+                            io.sockets.emit('countdown', countdown);
+                            io.sockets.emit('countdown_flag', true);
                             lost_card = false;
 
                             let myTimer2 = setInterval(() => {
@@ -2293,8 +2329,9 @@ io.sockets.on('connection', function (socket) {
                                     io.to(targeted_player.id).emit('assassine_flag_targeted_player', true);
                                     targeted_player.autorise = false;
 
+                                    countdown = 10;
+                                    io.sockets.emit('countdown', countdown);
                                     io.sockets.emit('countdown_flag', true);
-                                    let countdown = 10;
                                     let myTimer3 = setInterval(() => {
                                         io.sockets.emit('countdown', countdown);
                                         console.log(countdown);
@@ -2309,9 +2346,10 @@ io.sockets.on('connection', function (socket) {
                                                 + "contrer " + current_player.username);
 
                                             //Demander au joueur courant si le joueur ciblé ment ou pas
-                                            io.sockets.emit('countdown_flag', true);
                                             socket.emit('choice_flag', true);
                                             countdown = 10;
+                                            io.sockets.emit('countdown', countdown);
+                                            io.sockets.emit('countdown_flag', true);
                                             let myTimer4 = setInterval(() => {
                                                 io.sockets.emit('countdown', countdown);
                                                 console.log(countdown);
@@ -2339,8 +2377,9 @@ io.sockets.on('connection', function (socket) {
                                                         socket.emit('choice_cards_flag', true);
 
                                                         //Timer de perte de carte du joueur courant
-                                                        io.sockets.emit('countdown_flag', true);
                                                         countdown = 10;
+                                                        io.sockets.emit('countdown', countdown);
+                                                        io.sockets.emit('countdown_flag', true);
                                                         lost_card = false;
                                                         let myTimer5 = setInterval(() => {
                                                             io.sockets.emit('countdown', countdown);
@@ -2427,8 +2466,9 @@ io.sockets.on('connection', function (socket) {
                                             //ASSASSINAT
                                             io.sockets.emit('action_messages', current_player.username + " assassine " + targeted_player.username);
                                             io.sockets.to(target_player_id).emit('choice_cards_flag', true);
-                                            io.sockets.emit('countdown_flag', true);
                                             countdown = 10;
+                                            io.sockets.emit('countdown', countdown);
+                                            io.sockets.emit('countdown_flag', true);
                                             let myTimer8 = setInterval(() => {
                                                 io.sockets.emit('countdown', countdown);
                                                 console.log(countdown);
@@ -2513,8 +2553,9 @@ io.sockets.on('connection', function (socket) {
                                         io.to(targeted_player.id).emit('assassine_flag_targeted_player', true);
                                         targeted_player.autorise = false;
 
+                                        countdown = 10;
+                                        io.sockets.emit('countdown', countdown);
                                         io.sockets.emit('countdown_flag', true);
-                                        let countdown = 10;
                                         let myTimer2 = setInterval(() => {
                                             io.sockets.emit('countdown', countdown);
                                             console.log(countdown);
@@ -2529,9 +2570,10 @@ io.sockets.on('connection', function (socket) {
                                                     + "contrer " + current_player.username);
 
                                                 //Demander au joueur courant si le joueur ciblé ment ou pas
-                                                io.sockets.emit('countdown_flag', true);
                                                 socket.emit('choice_flag', true);
                                                 countdown = 10;
+                                                io.sockets.emit('countdown', countdown);
+                                                io.sockets.emit('countdown_flag', true);
                                                 let myTimer3 = setInterval(() => {
                                                     io.sockets.emit('countdown', countdown);
                                                     console.log(countdown);
@@ -2559,8 +2601,9 @@ io.sockets.on('connection', function (socket) {
                                                             socket.emit('choice_cards_flag', true);
 
                                                             //Timer de perte de carte du joueur courant
-                                                            io.sockets.emit('countdown_flag', true);
                                                             countdown = 10;
+                                                            io.sockets.emit('countdown', countdown);
+                                                            io.sockets.emit('countdown_flag', true);
                                                             lost_card = false;
                                                             let myTimer4 = setInterval(() => {
                                                                 io.sockets.emit('countdown', countdown);
@@ -2646,8 +2689,9 @@ io.sockets.on('connection', function (socket) {
                                                 //ASSASSINAT
                                                 io.sockets.emit('action_messages', current_player.username + " assassine " + targeted_player.username);
                                                 io.sockets.to(target_player_id).emit('choice_cards_flag', true);
+                                                countdown = 10;
+                                                io.sockets.emit('countdown', countdown);
                                                 io.sockets.emit('countdown_flag', true);
-                                                let countdown = 10;
                                                 lost_card = false;
 
                                                 let myTimer3 = setInterval(() => {
@@ -2706,8 +2750,9 @@ io.sockets.on('connection', function (socket) {
                         socket.emit('choice_cards_flag', true);
 
                         //Timer de perte de carte du joueur courant
-                        io.sockets.emit('countdown_flag', true);
                         countdown = 10;
+                        io.sockets.emit('countdown', countdown);
+                        io.sockets.emit('countdown_flag', true);
                         lost_card = false;
 
                         let myTimer2 = setInterval(() => {
