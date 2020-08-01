@@ -165,7 +165,7 @@ Vue.component('game', {
             <div id="action_message_style"> {{ action_messages }} </div>
 
             <figure id="regles_figure">
-                <img id="regles_image" src="style/images/regles.png">
+                <img id="regles_image" src="style/images/regles.PNG">
                 <figcaption> Remarque: Lorsqu'un joueur possède 10 pièces ou plus lors de son tour, <br>
                     celui-ci doit obligatoirement assassiner un autre joueur (7 pièces).
                 </figcaption>
