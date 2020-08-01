@@ -61,23 +61,23 @@ Vue.component('game', {
     template:
         `
         <div>
-            <h3>Jeu en cours</h3>
+            <h3>Complots</h3>
 
             <div v-for="player in players" :key="player.id"> 
-                <p>
-                Joueur: {{ player.username }} ({{player.id}}) 
-                + Cartes: {{ player.cards[0] }}
-                    {{ player.cards[1] }}
-                + Pièces: {{ player.pieces }}
-                + En vie ? {{ player.alive }}
-                + Autorise le tour ? {{ player.autorise }}
-                </p>
-                <button v-show="target_player_flag && player.id!=current_player_id && player.alive"
+                <div id="player_container">
+                    {{ player.username }}
+                    | Cartes: {{ player.cards[0] }}
+                        {{ player.cards[1] }}
+                    | Pièces: {{ player.pieces }}
+                    | En vie: {{ player.alive }}
+                    | Autorise le tour: {{ player.autorise }}
+
+                    <button v-show="target_player_flag && player.id!=current_player_id && player.alive"
                     @click="target_player(player.id)">Cibler ce joueur</button>
+                </div>
             </div>
 
-            <div>
-                <p> Mes cartes: </p>
+            <div id="mes_cartes_container">
                 <div v-if="cards[0]">
                     <p v-if="cards[0].active"> {{ cards[0].name }} </p>
                     <p v-else> {{ 'Not' + cards[0].name }} </p>
@@ -98,7 +98,7 @@ Vue.component('game', {
             </div>
 
             <div v-else>
-                <p> {{ current_player_id }} joue !</p>
+                <p> Joue le tour: {{ current_player_username }} </p>
             </div>
             
             <div v-if="aide_etrangere_flag">
@@ -150,7 +150,7 @@ Vue.component('game', {
                 </div>
             </div>
 
-            <div v-if="echanger_cards_flag">
+            <div id="echarger_cards_container" v-if="echanger_cards_flag">
                 <p> Cartes disponibles: </p>
                 <div v-for="card in echanger_cards">
                     <button v-if="!card.picked" @click="pick_card(card.id)">{{ card.name }}</button>
@@ -162,8 +162,14 @@ Vue.component('game', {
                 <button @click="confirmer_cards">Confirmer les cartes</button>
             </div>
 
-            <p v-for="message in action_messages"> {{ message }} </p>
+            <div id="action_message_style"> {{ action_messages }} </div>
 
+            <figure id="regles_figure">
+                <img id="regles_image" src="style/images/regles.png">
+                <figcaption> Remarque: Lorsqu'un joueur possède 10 pièces ou plus lors de son tour, <br>
+                    celui-ci doit obligatoirement assassiner un autre joueur (7 pièces).
+                </figcaption>
+            </figure>
         </div>
         `,
 
@@ -171,8 +177,9 @@ Vue.component('game', {
         return {
             players: [],
             current_player_id: '', //ID du joueur jouant le tour
+            current_player_username: '', //Nom du joueur jouant le tour
             player_id: socket.id, //ID du Client
-            action_messages: [],
+            action_messages: '',
 
             target_player_flag: false,
             target_type: '',
@@ -283,12 +290,16 @@ Vue.component('game', {
             this.current_player_id = player_id;
         });
 
+        socket.on('get_current_player_username', (player_username) => {
+            this.current_player_username = player_username;
+        });
+
         socket.on('my_turn_flag', (bool) => {
             this.my_turn_flag = bool;
         });
 
         socket.on('action_messages', (message) => {
-            this.action_messages.unshift(message);
+            this.action_messages = message + "\n" + this.action_messages;
         });
 
         socket.on('countdown', (countdown) => {

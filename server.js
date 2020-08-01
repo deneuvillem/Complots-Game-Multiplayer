@@ -2885,6 +2885,7 @@ function next_turn_player() {
         current_player = players[index_players];
         already_played = false;
         io.sockets.emit('get_current_player_id', current_player.id);
+        io.sockets.emit('get_current_player_username', current_player.username);
         io.sockets.to(current_player.id).emit('my_turn_flag', true);
     }
 }

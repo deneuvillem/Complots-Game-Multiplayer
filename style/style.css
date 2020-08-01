@@ -1,3 +1,48 @@
 .test {
     color: blue;
 }
+
+#regles_figure {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+}
+
+#regles_image {
+    border: 5px solid black;
+}
+
+#action_message_style {
+    height:350px;
+    width:400px;
+    border:1px solid #ccc;
+    overflow:auto;
+    white-space: pre;
+    padding-left: 5px;
+    margin-top: 10px;
+    border: 1px solid black;
+}
+
+#player_container {
+    width: 450px;
+    height: 50px;
+    padding: 5px;  
+    border: 1px solid blue;
+    margin-top: 3px;
+}
+
+#mes_cartes_container {  
+    width: 125px;
+    height: 75px;
+    padding: 5px;  
+    border: 1px solid red;
+    margin-top: 10px;
+}
+
+#echarger_cards_container {
+    width: 300px;
+    height: 300pxpx;
+    padding: 5px;  
+    border: 1px solid green;
+    margin-top: 10px;
+}
