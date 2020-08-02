@@ -69,18 +69,18 @@ Vue.component('game', {
                     <span v-else id="player_not_alive_style"> {{ player.username }} </span>
 
                     <img v-if="!player.cards[0]" src="style/images/carte_retournee.png" id="players_cards_style">
-                    <img v-else-if="player.cards[0]==='Duc'" src="style/images/not_duc.PNG" id="players_cards_style">
-                    <img v-else-if="player.cards[0]==='Ambassadeur'" src="style/images/not_ambassadeur.PNG" id="players_cards_style">
-                    <img v-else-if="player.cards[0]==='Assassin'" src="style/images/not_assassin.PNG" id="players_cards_style">
-                    <img v-else-if="player.cards[0]==='Capitaine'" src="style/images/not_capitaine.PNG" id="players_cards_style">
-                    <img v-else-if="player.cards[0]==='Comtesse'" src="style/images/not_comtesse.PNG" id="players_cards_style">
+                    <img v-else-if="player.cards[0]==='Duc'" src="style/images/not_duc.png" id="players_cards_style">
+                    <img v-else-if="player.cards[0]==='Ambassadeur'" src="style/images/not_ambassadeur.png" id="players_cards_style">
+                    <img v-else-if="player.cards[0]==='Assassin'" src="style/images/not_assassin.png" id="players_cards_style">
+                    <img v-else-if="player.cards[0]==='Capitaine'" src="style/images/not_capitaine.png" id="players_cards_style">
+                    <img v-else-if="player.cards[0]==='Comtesse'" src="style/images/not_comtesse.png" id="players_cards_style">
 
-                    <img v-if="!player.cards[1]" src="style/images/carte_retournee.PNG" id="players_cards_style">
-                    <img v-else-if="player.cards[1]==='Duc'" src="style/images/not_duc.PNG" id="players_cards_style">
-                    <img v-else-if="player.cards[1]==='Ambassadeur'" src="style/images/not_ambassadeur.PNG" id="players_cards_style">
-                    <img v-else-if="player.cards[1]==='Assassin'" src="style/images/not_assassin.PNG" id="players_cards_style">
-                    <img v-else-if="player.cards[1]==='Capitaine'" src="style/images/not_capitaine.PNG" id="players_cards_style">
-                    <img v-else-if="player.cards[1]==='Comtesse'" src="style/images/not_comtesse.PNG" id="players_cards_style">
+                    <img v-if="!player.cards[1]" src="style/images/carte_retournee.png" id="players_cards_style">
+                    <img v-else-if="player.cards[1]==='Duc'" src="style/images/not_duc.png" id="players_cards_style">
+                    <img v-else-if="player.cards[1]==='Ambassadeur'" src="style/images/not_ambassadeur.png" id="players_cards_style">
+                    <img v-else-if="player.cards[1]==='Assassin'" src="style/images/not_assassin.png" id="players_cards_style">
+                    <img v-else-if="player.cards[1]==='Capitaine'" src="style/images/not_capitaine.png" id="players_cards_style">
+                    <img v-else-if="player.cards[1]==='Comtesse'" src="style/images/not_comtesse.png" id="players_cards_style">
 
                     | Pièces: {{ player.pieces }}
 
@@ -93,27 +93,27 @@ Vue.component('game', {
 
 
             <div v-if="cards[0]">
-                <img v-if="cards[0].active && cards[0].name==='Duc'" src="style/images/duc.PNG" id="my_cards_style">
-                <img v-else-if="!cards[0].active && cards[0].name==='Duc'" src="style/images/not_duc.PNG" id="my_cards_style">
-                <img v-else-if="cards[0].active && cards[0].name==='Ambassadeur'" src="style/images/ambassadeur.PNG" id="my_cards_style">
-                <img v-else-if="!cards[0].active && cards[0].name==='Ambassadeur'" src="style/images/not_ambassadeur.PNG" id="my_cards_style">
-                <img v-else-if="cards[0].active && cards[0].name==='Assassin'" src="style/images/assassin.PNG" id="my_cards_style">
-                <img v-else-if="!cards[0].active && cards[0].name==='Assassin'" src="style/images/not_assassin.PNG" id="my_cards_style">
-                <img v-else-if="cards[0].active && cards[0].name==='Capitaine'" src="style/images/capitaine.PNG" id="my_cards_style">
-                <img v-else-if="!cards[0].active && cards[0].name==='Capitaine'" src="style/images/not_capitaine.PNG" id="my_cards_style">
-                <img v-else-if="cards[0].active && cards[0].name==='Comtesse'" src="style/images/comtesse.PNG" id="my_cards_style">
-                <img v-else-if="!cards[0].active && cards[0].name==='Comtesse'" src="style/images/not_comtesse.PNG" id="my_cards_style">
+                <img v-if="cards[0].active && cards[0].name==='Duc'" src="style/images/duc.png" id="my_cards_style">
+                <img v-else-if="!cards[0].active && cards[0].name==='Duc'" src="style/images/not_duc.png" id="my_cards_style">
+                <img v-else-if="cards[0].active && cards[0].name==='Ambassadeur'" src="style/images/ambassadeur.png" id="my_cards_style">
+                <img v-else-if="!cards[0].active && cards[0].name==='Ambassadeur'" src="style/images/not_ambassadeur.png" id="my_cards_style">
+                <img v-else-if="cards[0].active && cards[0].name==='Assassin'" src="style/images/assassin.png" id="my_cards_style">
+                <img v-else-if="!cards[0].active && cards[0].name==='Assassin'" src="style/images/not_assassin.png" id="my_cards_style">
+                <img v-else-if="cards[0].active && cards[0].name==='Capitaine'" src="style/images/capitaine.png" id="my_cards_style">
+                <img v-else-if="!cards[0].active && cards[0].name==='Capitaine'" src="style/images/not_capitaine.png" id="my_cards_style">
+                <img v-else-if="cards[0].active && cards[0].name==='Comtesse'" src="style/images/comtesse.png" id="my_cards_style">
+                <img v-else-if="!cards[0].active && cards[0].name==='Comtesse'" src="style/images/not_comtesse.png" id="my_cards_style">
 
-                <img v-if="cards[1].active && cards[1].name==='Duc'" src="style/images/duc.PNG" id="my_cards_style">
-                <img v-else-if="!cards[1].active && cards[1].name==='Duc'" src="style/images/not_duc.PNG" id="my_cards_style">
-                <img v-else-if="cards[1].active && cards[1].name==='Ambassadeur'" src="style/images/ambassadeur.PNG" id="my_cards_style">
-                <img v-else-if="!cards[1].active && cards[1].name==='Ambassadeur'" src="style/images/not_ambassadeur.PNG" id="my_cards_style">
-                <img v-else-if="cards[1].active && cards[1].name==='Assassin'" src="style/images/assassin.PNG" id="my_cards_style">
-                <img v-else-if="!cards[1].active && cards[1].name==='Assassin'" src="style/images/not_assassin.PNG" id="my_cards_style">
-                <img v-else-if="cards[1].active && cards[1].name==='Capitaine'" src="style/images/capitaine.PNG" id="my_cards_style">
-                <img v-else-if="!cards[1].active && cards[1].name==='Capitaine'" src="style/images/not_capitaine.PNG" id="my_cards_style">
-                <img v-else-if="cards[1].active && cards[1].name==='Comtesse'" src="style/images/comtesse.PNG" id="my_cards_style">
-                <img v-else-if="!cards[1].active && cards[1].name==='Comtesse'" src="style/images/not_comtesse.PNG" id="my_cards_style">
+                <img v-if="cards[1].active && cards[1].name==='Duc'" src="style/images/duc.png" id="my_cards_style">
+                <img v-else-if="!cards[1].active && cards[1].name==='Duc'" src="style/images/not_duc.png" id="my_cards_style">
+                <img v-else-if="cards[1].active && cards[1].name==='Ambassadeur'" src="style/images/ambassadeur.png" id="my_cards_style">
+                <img v-else-if="!cards[1].active && cards[1].name==='Ambassadeur'" src="style/images/not_ambassadeur.png" id="my_cards_style">
+                <img v-else-if="cards[1].active && cards[1].name==='Assassin'" src="style/images/assassin.png" id="my_cards_style">
+                <img v-else-if="!cards[1].active && cards[1].name==='Assassin'" src="style/images/not_assassin.png" id="my_cards_style">
+                <img v-else-if="cards[1].active && cards[1].name==='Capitaine'" src="style/images/capitaine.png" id="my_cards_style">
+                <img v-else-if="!cards[1].active && cards[1].name==='Capitaine'" src="style/images/not_capitaine.png" id="my_cards_style">
+                <img v-else-if="cards[1].active && cards[1].name==='Comtesse'" src="style/images/comtesse.png" id="my_cards_style">
+                <img v-else-if="!cards[1].active && cards[1].name==='Comtesse'" src="style/images/not_comtesse.png" id="my_cards_style">
             </div>
 
             <div v-if="my_turn_flag" id="actions_style">
