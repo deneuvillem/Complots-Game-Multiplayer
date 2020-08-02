@@ -65,101 +65,122 @@ Vue.component('game', {
 
             <div v-for="player in players" :key="player.id"> 
                 <div id="player_container">
-                    {{ player.username }}
-                    | Cartes: {{ player.cards[0] }}
-                        {{ player.cards[1] }}
+                    <span v-if="player.alive"> {{ player.username }} </span>
+                    <span v-else id="player_not_alive_style"> {{ player.username }} </span>
+
+                    <img v-if="!player.cards[0]" src="style/images/carte_retournee.PNG" id="players_cards_style">
+                    <img v-else-if="player.cards[0]==='Duc'" src="style/images/not_duc.PNG" id="players_cards_style">
+                    <img v-else-if="player.cards[0]==='Ambassadeur'" src="style/images/not_ambassadeur.PNG" id="players_cards_style">
+                    <img v-else-if="player.cards[0]==='Assassin'" src="style/images/not_assassin.PNG" id="players_cards_style">
+                    <img v-else-if="player.cards[0]==='Capitaine'" src="style/images/not_capitaine.PNG" id="players_cards_style">
+                    <img v-else-if="player.cards[0]==='Comtesse'" src="style/images/not_comtesse.PNG" id="players_cards_style">
+
+                    <img v-if="!player.cards[1]" src="style/images/carte_retournee.PNG" id="players_cards_style">
+                    <img v-else-if="player.cards[1]==='Duc'" src="style/images/not_duc.PNG" id="players_cards_style">
+                    <img v-else-if="player.cards[1]==='Ambassadeur'" src="style/images/not_ambassadeur.PNG" id="players_cards_style">
+                    <img v-else-if="player.cards[1]==='Assassin'" src="style/images/not_assassin.PNG" id="players_cards_style">
+                    <img v-else-if="player.cards[1]==='Capitaine'" src="style/images/not_capitaine.PNG" id="players_cards_style">
+                    <img v-else-if="player.cards[1]==='Comtesse'" src="style/images/not_comtesse.PNG" id="players_cards_style">
+
                     | Pièces: {{ player.pieces }}
-                    | En vie: {{ player.alive }}
-                    | Autorise le tour: {{ player.autorise }}
+
+                    <span v-if="player.id===current_player_id"> | Joueur actuel </span>
 
                     <button v-show="target_player_flag && player.id!=current_player_id && player.alive"
-                    @click="target_player(player.id)">Cibler ce joueur</button>
+                    @click="target_player(player.id)" id="actions_button_style">Cibler ce joueur</button>
                 </div>
             </div>
 
-            <div id="mes_cartes_container">
-                <div v-if="cards[0]">
-                    <p v-if="cards[0].active"> {{ cards[0].name }} </p>
-                    <p v-else> {{ 'Not' + cards[0].name }} </p>
-                    <p v-if="cards[1].active"> {{ cards[1].name }} </p>
-                    <p v-else> {{ 'Not' + cards[1].name }} </p>
-                </div>
+
+            <div v-if="cards[0]">
+                <img v-if="cards[0].active && cards[0].name==='Duc'" src="style/images/duc.PNG" id="my_cards_style">
+                <img v-else-if="!cards[0].active && cards[0].name==='Duc'" src="style/images/not_duc.PNG" id="my_cards_style">
+                <img v-else-if="cards[0].active && cards[0].name==='Ambassadeur'" src="style/images/ambassadeur.PNG" id="my_cards_style">
+                <img v-else-if="!cards[0].active && cards[0].name==='Ambassadeur'" src="style/images/not_ambassadeur.PNG" id="my_cards_style">
+                <img v-else-if="cards[0].active && cards[0].name==='Assassin'" src="style/images/assassin.PNG" id="my_cards_style">
+                <img v-else-if="!cards[0].active && cards[0].name==='Assassin'" src="style/images/not_assassin.PNG" id="my_cards_style">
+                <img v-else-if="cards[0].active && cards[0].name==='Capitaine'" src="style/images/capitaine.PNG" id="my_cards_style">
+                <img v-else-if="!cards[0].active && cards[0].name==='Capitaine'" src="style/images/not_capitaine.PNG" id="my_cards_style">
+                <img v-else-if="cards[0].active && cards[0].name==='Comtesse'" src="style/images/comtesse.PNG" id="my_cards_style">
+                <img v-else-if="!cards[0].active && cards[0].name==='Comtesse'" src="style/images/not_comtesse.PNG" id="my_cards_style">
+
+                <img v-if="cards[1].active && cards[1].name==='Duc'" src="style/images/duc.PNG" id="my_cards_style">
+                <img v-else-if="!cards[1].active && cards[1].name==='Duc'" src="style/images/not_duc.PNG" id="my_cards_style">
+                <img v-else-if="cards[1].active && cards[1].name==='Ambassadeur'" src="style/images/ambassadeur.PNG" id="my_cards_style">
+                <img v-else-if="!cards[1].active && cards[1].name==='Ambassadeur'" src="style/images/not_ambassadeur.PNG" id="my_cards_style">
+                <img v-else-if="cards[1].active && cards[1].name==='Assassin'" src="style/images/assassin.PNG" id="my_cards_style">
+                <img v-else-if="!cards[1].active && cards[1].name==='Assassin'" src="style/images/not_assassin.PNG" id="my_cards_style">
+                <img v-else-if="cards[1].active && cards[1].name==='Capitaine'" src="style/images/capitaine.PNG" id="my_cards_style">
+                <img v-else-if="!cards[1].active && cards[1].name==='Capitaine'" src="style/images/not_capitaine.PNG" id="my_cards_style">
+                <img v-else-if="cards[1].active && cards[1].name==='Comtesse'" src="style/images/comtesse.PNG" id="my_cards_style">
+                <img v-else-if="!cards[1].active && cards[1].name==='Comtesse'" src="style/images/not_comtesse.PNG" id="my_cards_style">
             </div>
 
-            <div v-if="my_turn_flag">
-                <p> C'est à votre tour de jouer ! </p>
-                <button @click="revenu">Revenu</button>
-                <button @click="aide_etrangere">Aide étrangère</button>
-                <button @click="assassinat">Assassinat</button>
-                <button @click="taxe">Taxe</button>
-                <button @click="voler">Voler</button>
-                <button @click="echanger">Échanger</button>
-                <button @click="assassine">Assassine</button>
-            </div>
-
-            <div v-else>
-                <p> Joue le tour: {{ current_player_username }} </p>
+            <div v-if="my_turn_flag" id="actions_style">
+                <button @click="revenu" id="actions_button_style">Revenu</button>
+                <button @click="aide_etrangere" id="actions_button_style">Aide étrangère</button>
+                <button @click="assassinat" id="actions_button_style">Assassinat</button>
+                <button @click="taxe" id="actions_button_style">Taxe</button>
+                <button @click="voler" id="actions_button_style">Voler</button>
+                <button @click="echanger" id="actions_button_style">Échanger</button>
+                <button @click="assassine" id="actions_button_style">Assassine</button>
             </div>
             
-            <div v-if="aide_etrangere_flag">
-                <button @click="autoriser">J'autorise</button>
-                <button @click="contrer">Je contre avec mon Duc</button>
+            <div v-if="aide_etrangere_flag" id="action_style">
+                <button @click="autoriser" id="actions_button_style">J'autorise</button>
+                <button @click="contrer" id="actions_button_style">Je contre avec mon Duc</button>
             </div>
 
-            <div v-if="taxe_flag">
-                <button @click="autoriser">J'autorise</button>
-                <button @click="contrer">Je mets en doute le Duc</button>
+            <div v-if="taxe_flag" id="action_style">
+                <button @click="autoriser" id="actions_button_style">J'autorise</button>
+                <button @click="contrer" id="actions_button_style">Je mets en doute le Duc</button>
             </div>
 
-            <div v-if="voler_flag">
-                <button @click="autoriser">J'autorise</button>
-                <button @click="contrer">Je mets en doute le Capitaine</button>
+            <div v-if="voler_flag" id="action_style">
+                <button @click="autoriser" id="actions_button_style">J'autorise</button>
+                <button @click="contrer" id="actions_button_style">Je mets en doute le Capitaine</button>
             </div>
-            <div v-if="voler_flag_targeted_player">
-                <button @click="autoriser">J'autorise</button>
-                <button @click="contrer_voler_capitaine">Je contre avec mon Capitaine</button>
-                <button @click="contrer_voler_ambassadeur">Je contre avec mon Ambassadeur</button>
-            </div>
-
-            <div v-if="echanger_flag">
-                <button @click="autoriser">J'autorise</button>
-                <button @click="contrer">Je mets en doute l'Ambassadeur</button>
+            <div v-if="voler_flag_targeted_player" id="action_style">
+                <button @click="autoriser" id="actions_button_style">J'autorise</button>
+                <button @click="contrer_voler_capitaine" id="actions_button_style">Je contre avec mon Capitaine</button>
+                <button @click="contrer_voler_ambassadeur" id="actions_button_style">Je contre avec mon Ambassadeur</button>
             </div>
 
-            <div v-if="assassine_flag">
-                <button @click="autoriser">J'autorise</button>
-                <button @click="contrer">Je mets en doute l'Assassin</button>
-            </div>
-            <div v-if="assassine_flag_targeted_player">
-                <button @click="autoriser">J'autorise</button>
-                <button @click="contrer_assassine">Je contre avec ma Comtesse</button>
+            <div v-if="echanger_flag" id="action_style">
+                <button @click="autoriser" id="actions_button_style">J'autorise</button>
+                <button @click="contrer" id="actions_button_style">Je mets en doute l'Ambassadeur</button>
             </div>
 
-            <p v-if="countdown_flag"> {{ countdown }} </p>
-
-            <div v-if="choice_flag">
-                <button @click="truth">Il ou Elle dit la vérité</button>
-                <button @click="lie">Il ou Elle ment</button>
+            <div v-if="assassine_flag" id="action_style">
+                <button @click="autoriser" id="actions_button_style">J'autorise</button>
+                <button @click="contrer" id="actions_button_style">Je mets en doute l'Assassin</button>
+            </div>
+            <div v-if="assassine_flag_targeted_player" id="action_style">
+                <button @click="autoriser" id="actions_button_style">J'autorise</button>
+                <button @click="contrer_assassine" id="actions_button_style">Je contre avec ma Comtesse</button>
             </div>
 
-            <div v-if="choice_cards_flag">
+            <p v-if="countdown_flag" id="countdown_style"> Compte à rebours: {{ countdown }} </p>
+
+            <div v-if="choice_flag" id="action_style">
+                <button @click="truth" id="actions_button_style">Le joueur dit la vérité</button>
+                <button @click="lie" id="actions_button_style">Le joueur ment</button>
+            </div>
+
+            <div v-if="choice_cards_flag" id="action_style">
                 <p> Quelle carte perdre ? </p>
                 <div v-if="cards">
-                    <button v-if="cards[0].active" @click="lose_card(0)"> {{ cards[0].name }} </button>
-                    <button v-if="cards[1].active" @click="lose_card(1)"> {{ cards[1].name }} </button>
+                    <button v-if="cards[0].active" @click="lose_card(0)" id="actions_button_style"> {{ cards[0].name }} </button>
+                    <button v-if="cards[1].active" @click="lose_card(1)" id="actions_button_style"> {{ cards[1].name }} </button>
                 </div>
             </div>
 
             <div id="echarger_cards_container" v-if="echanger_cards_flag">
-                <p> Cartes disponibles: </p>
                 <div v-for="card in echanger_cards">
-                    <button v-if="!card.picked" @click="pick_card(card.id)">{{ card.name }}</button>
+                    <button v-if="!card.picked" @click="pick_card(card.id)" id="actions_button_style">{{ card.name }}</button>
+                    <button v-if="card.picked" @click="unpick_card(card.id)" id="selected_button_style">{{ card.name }}</button>
                 </div>
-                <p> Cartes choisies: </p>
-                <div v-for="card in echanger_cards">
-                    <button v-if="card.picked" @click="unpick_card(card.id)">{{ card.name }}</button>
-                </div>
-                <button @click="confirmer_cards">Confirmer les cartes</button>
+                <button @click="confirmer_cards" id="confirm_button_style">Confirmer les cartes</button>
             </div>
 
             <div id="action_message_style"> {{ action_messages }} </div>
