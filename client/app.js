@@ -68,7 +68,7 @@ Vue.component('game', {
                     <span v-if="player.alive"> {{ player.username }} </span>
                     <span v-else id="player_not_alive_style"> {{ player.username }} </span>
 
-                    <img v-if="!player.cards[0]" src="style/images/carte_retournee.PNG" id="players_cards_style">
+                    <img v-if="!player.cards[0]" src="style/images/carte_retournee.png" id="players_cards_style">
                     <img v-else-if="player.cards[0]==='Duc'" src="style/images/not_duc.PNG" id="players_cards_style">
                     <img v-else-if="player.cards[0]==='Ambassadeur'" src="style/images/not_ambassadeur.PNG" id="players_cards_style">
                     <img v-else-if="player.cards[0]==='Assassin'" src="style/images/not_assassin.PNG" id="players_cards_style">
