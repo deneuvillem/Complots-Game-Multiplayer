@@ -14,13 +14,16 @@
 
 #action_message_style {
     height:350px;
-    width:400px;
+    width:600px;
     border:1px solid #ccc;
     overflow:auto;
     white-space: pre;
     padding-left: 5px;
     margin-top: 10px;
     border: 1px solid black;
+    position: absolute;
+    top: 475px;
+    left: 900px;
 }
 
 #player_container {
