@@ -1,10 +1,12 @@
 const socket = io.connect();
+document.getElementsByTagName('body')[0].style.color="white";
+document.getElementsByTagName('body')[0].style.backgroundColor ="black";
 
 Vue.component('login', {
     template: 
         `
         <div>
-            <p class="test">Login screen</p>
+            <h3>Login Screen</h3>
             <input type="text" v-model="username">
             <button @click="join_lobby">Commencer la partie</button>
         </div>
@@ -22,19 +24,20 @@ Vue.component('login', {
             }
         }
     }
-})
+});
 
 
 Vue.component('lobby', {
     template: 
         `
         <div>
-            <p> Joueurs: </p>
+            <h3>Lobby</h3>
             <div v-for="player in players" :key="player.id"> 
-                <p> {{ player.username }}
-                    <p v-if="!player.ready"> Pas prêt </p>
-                    <p v-else> Prêt </p>
-                </p>
+                <div>
+                    <img v-if="!player.ready" src="style/images/not_ready.png" id="ready_image_style">
+                    <img v-else src="style/images/ready.png" id="ready_image_style">
+                    | {{ player.username }}
+                </div>
             </div>
             <p></p>
             <button v-if="!ready" @click="player_ready">Prêt</button>
@@ -62,7 +65,7 @@ Vue.component('lobby', {
             this.players = players;
         });
     }
-})
+});
 
 
 Vue.component('game', {
@@ -399,7 +402,7 @@ Vue.component('game', {
             this.assassine_flag_targeted_player = bool;
         });
     }
-})
+});
 
 
 const app = new Vue({

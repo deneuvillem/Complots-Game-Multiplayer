@@ -1,6 +1,9 @@
-.test {
-    color: blue;
+#ready_image_style {
+    border: 1px solid black;
+    height: 50px;
+    width: 50px;
 }
+
 
 #regles_figure {
     position: absolute;
@@ -14,16 +17,16 @@
 
 #action_message_style {
     height:350px;
-    width:600px;
+    width:800px;
     border:1px solid #ccc;
     overflow:auto;
     white-space: pre;
     padding-left: 5px;
     margin-top: 10px;
-    border: 1px solid black;
+    border: 2px white solid;
     position: absolute;
     top: 475px;
-    left: 900px;
+    left: 700px;
 }
 
 #player_container {
