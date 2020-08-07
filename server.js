@@ -2738,6 +2738,7 @@ function start_game() {
     deal_players_cards();
     io.sockets.emit('start_game');
     io.sockets.emit('refresh_players_game', players);
+    io.sockets.emit('get_deck_cards_number', deck.length);
     
     //Affichage des cartes
     players_cards.forEach((player) => {

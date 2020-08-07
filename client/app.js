@@ -127,6 +127,8 @@ Vue.component('game', {
                 <img v-else-if="!cards[1].active && cards[1].name==='Comtesse'" src="style/images/not_comtesse.png" id="my_cards_style">
             </div>
 
+            <p> Nombre de cartes dans la pioche: {{ deck_cards_number }} </p>
+
             <div v-if="my_turn_flag" id="actions_style">
                 <button @click="revenu" id="actions_button_style">Revenu</button>
                 <button @click="aide_etrangere" id="actions_button_style">Aide étrangère</button>
@@ -212,6 +214,7 @@ Vue.component('game', {
             current_player_username: '', //Nom du joueur jouant le tour
             player_id: socket.id, //ID du Client
             action_messages: '',
+            deck_cards_number: 0,
 
             target_player_flag: false,
             target_type: '',
@@ -324,6 +327,10 @@ Vue.component('game', {
 
         socket.on('get_current_player_username', (player_username) => {
             this.current_player_username = player_username;
+        });
+
+        socket.on('get_deck_cards_number', (number) => {
+            this.deck_cards_number = number;
         });
 
         socket.on('my_turn_flag', (bool) => {
