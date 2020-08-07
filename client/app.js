@@ -204,7 +204,7 @@ Vue.component('game', {
 
             target_player_flag: false,
             target_type: '',
-            countdown: 10,
+            countdown: 15,
             countdown_flag: false,
             contrer_flag: false,
             my_turn_flag: false,
