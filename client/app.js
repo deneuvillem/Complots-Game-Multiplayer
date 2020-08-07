@@ -6,12 +6,20 @@ Vue.component('login', {
         <div>
             <p class="test">Login screen</p>
             <input type="text" v-model="username">
-            <button @click="$emit('event-start-lobby', username)">Commencer la partie</button>
+            <button @click="join_lobby">Commencer la partie</button>
         </div>
         `,
     data() {
         return {
             username: ''
+        }
+    },
+    methods: {
+        join_lobby() {
+            if (1 <= this.username.length && this.username.length <= 12) {
+                console.log(this.username.length);
+                this.$emit('event-start-lobby', this.username);
+            }
         }
     }
 })
@@ -402,9 +410,11 @@ const app = new Vue({
     
     methods: {
         start_lobby(player_username) {
-            this.state = 'lobby';
-            socket.emit('new_player', player_username);
-            document.title = player_username + ' - ' + document.title;
+            if (1 <= player_username.length && player_username.length <= 12) {
+                this.state = 'lobby';
+                socket.emit('new_player', player_username);
+                document.title = player_username + ' - ' + document.title;
+            }
         },
     },
     created() {

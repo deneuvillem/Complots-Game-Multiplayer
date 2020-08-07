@@ -35,11 +35,11 @@ var count_ready_players = 0;
 var current_player; //Joueur qui joue le tour
 var index_players = 0; //Pour itérer sur la liste des joueurs
 var game_started = false;
-var counter_player;
+var counter_player = undefined
 var already_played = false;
 var truth_lie = undefined;
 var lost_card = false;
-var targeted_player;
+var targeted_player = undefined;
 
 //VOL
 var contrer_voler_capitaine = false;
@@ -65,17 +65,19 @@ io.sockets.on('connection', function (socket) {
 
     //LOBBY
     socket.on('new_player', function (player_username) {
-        console.log("Pseudo: " + player_username + ", ID: " + socket.id);
-        players.push({
-            username: player_username,
-            id: socket.id,
-            ready: false,
-            cards: [false, false],
-            pieces: 0,
-            autorise: false,
-            alive: true
-        });
-        io.sockets.emit('refresh_players_lobby', players);
+        if (1 <= player_username.length && player_username.length <= 12) {
+            console.log("Pseudo: " + player_username + ", ID: " + socket.id);
+            players.push({
+                username: player_username,
+                id: socket.id,
+                ready: false,
+                cards: [false, false],
+                pieces: 0,
+                autorise: false,
+                alive: true
+            });
+            io.sockets.emit('refresh_players_lobby', players);
+        }
     });
 
     socket.on('player_ready', function () {
@@ -2736,13 +2738,18 @@ function start_game() {
     deal_players_cards();
     io.sockets.emit('start_game');
     io.sockets.emit('refresh_players_game', players);
-    next_turn_player();
-
+    
     //Affichage des cartes
     players_cards.forEach((player) => {
         io.sockets.to(player.id).emit('cards', player.cards);
         console.log(player.cards);
     });
+
+    //Le premier joueur de la liste players commence la partie
+    current_player = players[index_players];
+    io.sockets.emit('get_current_player_id', current_player.id);
+    io.sockets.emit('get_current_player_username', current_player.username);
+    io.sockets.to(current_player.id).emit('my_turn_flag', true);
 
     console.log("Partie lancée !");
     console.log("Le joueur qui a l'id: " + current_player.id + " commence!");
