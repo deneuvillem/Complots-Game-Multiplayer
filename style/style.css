@@ -4,7 +4,6 @@
     width: 50px;
 }
 
-
 #regles_figure {
     position: absolute;
     top: 0px;
@@ -29,12 +28,20 @@
     left: 700px;
 }
 
-#player_container {
-    width: 450px;
+.player_container {
+    width: 475px;
     height: 100px;
     padding: 5px;  
-    border: 1px solid blue;
-    margin-top: 3px;
+    border: 2px solid blue;
+    margin-top: 5px;
+}
+
+.current_player_container {
+    width: 475px;
+    height: 100px;
+    padding: 5px;  
+    border: 2px solid green;
+    margin-top: 5px;
 }
 
 #my_cards_style {

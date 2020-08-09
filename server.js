@@ -261,8 +261,7 @@ io.sockets.on('connection', function (socket) {
 
                             //Le joueur qui contre possède la carte Duc
                             if (player_owns_card(counter_player, 'Duc')) {
-                                io.sockets.emit('action_messages', counter_player.username + " possédait bien un Duc donc "
-                                    + current_player.username + " va perdre une carte !");
+                                io.sockets.emit('action_messages', current_player.username + " va donc perdre une carte !");
                                 socket.emit('choice_cards_flag', true);
 
                                 //Timer de perte de carte du joueur courant
@@ -513,8 +512,7 @@ io.sockets.on('connection', function (socket) {
 
                     //Le joueur courant possède la carte Duc
                     if (player_owns_card(current_player, 'Duc')) {
-                        io.sockets.emit('action_messages', current_player.username + " possédait bien un Duc donc "
-                            + counter_player.username + " va perdre une carte !");
+                        io.sockets.emit('action_messages', counter_player.username + " va donc perdre une carte !");
                         io.to(counter_player.id).emit('choice_cards_flag', true);
 
                         //Timer de perte de carte du joueur qui contre
@@ -741,8 +739,7 @@ io.sockets.on('connection', function (socket) {
 
                                     //Le joueur qui contre possède la carte Capitaine/Ambassadeur
                                     if (player_owns_card(targeted_player, counter_card)) {
-                                        io.sockets.emit('action_messages', targeted_player.username + " possédait bien un " + counter_card + " donc "
-                                            + current_player.username + " va perdre une carte !");
+                                        io.sockets.emit('action_messages', current_player.username + " va donc perdre une carte !");
                                         socket.emit('choice_cards_flag', true);
 
                                         //Timer de perte de carte du joueur courant
@@ -926,8 +923,7 @@ io.sockets.on('connection', function (socket) {
 
                     //Le joueur courant possède la carte Capitaine
                     if (player_owns_card(current_player, 'Capitaine')) {
-                        io.sockets.emit('action_messages', current_player.username + " possédait bien un Capitaine donc "
-                            + counter_player.username + " va perdre une carte !");
+                        io.sockets.emit('action_messages', counter_player.username + " va donc perdre une carte !");
                         io.to(counter_player.id).emit('choice_cards_flag', true);
 
                         //Timer de perte de carte du joueur qui contre
@@ -1016,8 +1012,7 @@ io.sockets.on('connection', function (socket) {
 
                                                     //Le joueur qui contre possède la carte Capitaine/Ambassadeur
                                                     if (player_owns_card(targeted_player, counter_card)) {
-                                                        io.sockets.emit('action_messages', targeted_player.username + " possédait bien un " + counter_card + " donc "
-                                                            + current_player.username + " va perdre une carte !");
+                                                        io.sockets.emit('action_messages', current_player.username + " va donc perdre une carte !");
                                                         socket.emit('choice_cards_flag', true);
 
                                                         //Timer de perte de carte du joueur courant
@@ -1279,8 +1274,7 @@ io.sockets.on('connection', function (socket) {
 
                                                     //Le joueur qui contre possède la carte Capitaine/Ambassadeur
                                                     if (player_owns_card(targeted_player, counter_card)) {
-                                                        io.sockets.emit('action_messages', targeted_player.username + " possédait bien un " + counter_card + " donc "
-                                                            + current_player.username + " va perdre une carte !");
+                                                        io.sockets.emit('action_messages', current_player.username + " va donc perdre une carte !");
                                                         socket.emit('choice_cards_flag', true);
 
                                                         //Timer de perte de carte du joueur courant
@@ -1684,8 +1678,7 @@ io.sockets.on('connection', function (socket) {
 
                     //Le joueur courant possède la carte Ambassadeur
                     if (player_owns_card(current_player, 'Ambassadeur')) {
-                        io.sockets.emit('action_messages', current_player.username + " possédait bien un Ambassadeur donc "
-                            + counter_player.username + " va perdre une carte !");
+                        io.sockets.emit('action_messages', counter_player.username + " va donc perdre une carte !");
                         io.to(counter_player.id).emit('choice_cards_flag', true);
 
                         //Timer de perte de carte du joueur qui contre
@@ -2020,8 +2013,7 @@ io.sockets.on('connection', function (socket) {
 
                                     //Le joueur qui contre possède la carte Comtesse
                                     if (player_owns_card(targeted_player, 'Comtesse')) {
-                                        io.sockets.emit('action_messages', targeted_player.username + " possédait bien une Comtesse donc "
-                                            + current_player.username + " va perdre une carte !");
+                                        io.sockets.emit('action_messages', current_player.username + " va donc perdre une carte !");
                                         socket.emit('choice_cards_flag', true);
 
                                         //Timer de perte de carte du joueur courant
@@ -2176,8 +2168,7 @@ io.sockets.on('connection', function (socket) {
                         //Si le joueur qui contre est le joueur ciblé par l'Assassinat, il perd la partie
                         if (counter_player.id === targeted_player.id) {
                             //PERD LA PARTIE
-                            io.sockets.emit('action_messages', current_player.username + " possédait bien un Assassin donc "
-                            + counter_player.username + " perd la partie !");
+                            io.sockets.emit('action_messages', counter_player.username + " perd donc la partie !");
                             let player = players.find(player => player.id === targeted_player.id);
                             let player_cards = players_cards.find(player => player.id === targeted_player.id);
 
@@ -2196,8 +2187,7 @@ io.sockets.on('connection', function (socket) {
                         
                         //Le joueur qui contre n'est pas celui ciblé par l'assassinat
                         else {
-                            io.sockets.emit('action_messages', current_player.username + " possédait bien un Assassin donc "
-                            + counter_player.username + " va perdre une carte !");
+                            io.sockets.emit('action_messages', counter_player.username + " va donc perdre une carte !");
                             io.to(counter_player.id).emit('choice_cards_flag', true);
 
                             //Timer de perte de carte du joueur qui contre
@@ -2260,8 +2250,7 @@ io.sockets.on('connection', function (socket) {
 
                                                     //Le joueur qui contre possède la carte Comtesse
                                                     if (player_owns_card(targeted_player, 'Comtesse')) {
-                                                        io.sockets.emit('action_messages', targeted_player.username + " possédait bien une Comtesse donc "
-                                                            + current_player.username + " va perdre une carte !");
+                                                        io.sockets.emit('action_messages', current_player.username + " va donc perdre une carte !");
                                                         socket.emit('choice_cards_flag', true);
 
                                                         //Timer de perte de carte du joueur courant
@@ -2480,8 +2469,7 @@ io.sockets.on('connection', function (socket) {
 
                                                         //Le joueur qui contre possède la carte Comtesse
                                                         if (player_owns_card(targeted_player, 'Comtesse')) {
-                                                            io.sockets.emit('action_messages', targeted_player.username + " possédait bien une Comtesse donc "
-                                                                + current_player.username + " va perdre une carte !");
+                                                            io.sockets.emit('action_messages', current_player.username + " va donc perdre une carte !");
                                                             socket.emit('choice_cards_flag', true);
 
                                                             //Timer de perte de carte du joueur courant
@@ -2785,6 +2773,8 @@ function player_owns_card(pl, card) {
         deck.shift();
         console.log(deck);
         io.sockets.to(pl.id).emit('cards', player.cards);
+        io.sockets.emit('action_messages', pl.username + " possédait bien un/une " + card + ", le joueur le/la remet dans la pioche "
+            + "et tire une nouvelle carte");
         return true;
     }
     else if (player.cards[1].name === card && player.cards[1].active) {
@@ -2793,6 +2783,8 @@ function player_owns_card(pl, card) {
         deck.shift();
         console.log(deck);
         io.sockets.to(pl.id).emit('cards', player.cards);
+        io.sockets.emit('action_messages', pl.username + " possédait bien un/une " + card + ", le joueur le/la remet dans la pioche "
+            + "et tire une nouvelle carte");
         return true;
     }
     return false;

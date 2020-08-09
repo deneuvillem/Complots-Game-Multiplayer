@@ -7,8 +7,8 @@ Vue.component('login', {
         `
         <div>
             <h3>Login Screen</h3>
-            <input type="text" v-model="username">
-            <button @click="join_lobby">Commencer la partie</button>
+            <input type="text" v-model="username" placeholder="Entrer pseudo...">
+            <button @click="join_lobby">Rejoindre le Lobby</button>
         </div>
         `,
     data() {
@@ -19,7 +19,6 @@ Vue.component('login', {
     methods: {
         join_lobby() {
             if (1 <= this.username.length && this.username.length <= 12) {
-                console.log(this.username.length);
                 this.$emit('event-start-lobby', this.username);
             }
         }
@@ -75,9 +74,7 @@ Vue.component('game', {
             <h3>Complots</h3>
 
             <div v-for="player in players" :key="player.id"> 
-                <div id="player_container">
-                    <span v-if="player.alive"> {{ player.username }} </span>
-                    <span v-else id="player_not_alive_style"> {{ player.username }} </span>
+                <div v-bind:class="{ current_player_container:(player.id===current_player_id), player_container:(player.id!==current_player_id) }">
 
                     <img v-if="!player.cards[0]" src="style/images/carte_retournee.png" id="players_cards_style">
                     <img v-else-if="player.cards[0]==='Duc'" src="style/images/not_duc.png" id="players_cards_style">
@@ -93,12 +90,14 @@ Vue.component('game', {
                     <img v-else-if="player.cards[1]==='Capitaine'" src="style/images/not_capitaine.png" id="players_cards_style">
                     <img v-else-if="player.cards[1]==='Comtesse'" src="style/images/not_comtesse.png" id="players_cards_style">
 
+                    <button v-show="target_player_flag && player.id!=current_player_id && player.alive"
+                        @click="target_player(player.id)" id="actions_button_style">Cibler ce joueur</button>
+
                     | Pièces: {{ player.pieces }}
 
-                    <span v-if="player.id===current_player_id"> | Joueur actuel </span>
-
-                    <button v-show="target_player_flag && player.id!=current_player_id && player.alive"
-                    @click="target_player(player.id)" id="actions_button_style">Cibler ce joueur</button>
+                    <span v-if="player.alive"> | {{ player.username }} </span>
+                    <span v-else id="player_not_alive_style"> | {{ player.username }} </span>
+                    
                 </div>
             </div>
 
