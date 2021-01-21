@@ -1,11 +1,10 @@
 const socket = io.connect();
-document.getElementsByTagName('body')[0].style.color="white";
-document.getElementsByTagName('body')[0].style.backgroundColor ="black";
-
 Vue.component('login', {
     template: 
         `
-        <div>
+        <div class="prelobby-div">
+            <h1> Complot Online </h1>
+            <img src="style/images/LobbyImg.jpeg" />
             <h3>Login Screen</h3>
             <input type="text" v-model="username" placeholder="Entrer pseudo...">
             <button @click="join_lobby">Rejoindre le Lobby</button>
@@ -29,13 +28,15 @@ Vue.component('login', {
 Vue.component('lobby', {
     template: 
         `
-        <div>
-            <h3>Lobby</h3>
-            <div v-for="player in players" :key="player.id"> 
-                <div>
-                    <img v-if="!player.ready" src="style/images/not_ready.png" id="ready_image_style">
-                    <img v-else src="style/images/ready.png" id="ready_image_style">
-                    | {{ player.username }}
+        <div class="lobby-div">
+            <h1>Lobby</h1>
+            <div class="lobby-div-grid"> 
+                <div v-for="player in players" :key="player.id">
+                    <div class="lobby-div-grid-div" v-bind:class="{ ShadowGreen: player.ready, ShadowRed: !player.ready}">
+                        <img v-if="!player.ready" src="style/images/not_ready.png" id="ready_image_style">
+                        <img v-else src="style/images/ready.png" id="ready_image_style">
+                        <span>{{ player.username }}</span>
+                    </div>   
                 </div>
             </div>
             <p></p>
@@ -53,6 +54,7 @@ Vue.component('lobby', {
         player_ready() {
             socket.emit('player_ready');
             this.ready = true;
+            
         },
         player_not_ready() {
             socket.emit('player_not_ready');
